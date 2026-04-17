@@ -1,4 +1,4 @@
-# Vaccine Module (vaccine_*)
+# Vaccine Module
 
 Vaccine campaign management module for Alpro Pharmacy — Octopus Dashboard (ODB).
 Manages flu vaccine appointments, tracks vaccination transactions, and coordinates between pharmacy outlets and partner clinics.
