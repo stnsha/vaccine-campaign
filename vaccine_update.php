@@ -39,14 +39,14 @@ if(isset($_POST['submit'])){
 	}
 
 	//prevent duplication
-	$sql2="select id from `vaccine_trans_local` where `outlet_id`='$outlet_id' and `v_date`='$v_date' and `cust_id`='$cust_id' and `item_code`='$item_code' and `id`!='$trans_id' and recycle=0";
+	$sql2="select id from `vaccine_trans` where `outlet_id`='$outlet_id' and `v_date`='$v_date' and `cust_id`='$cust_id' and `item_code`='$item_code' and `id`!='$trans_id' and recycle=0";
 	$result2 = mysqli_query($conn, $sql2);
 	$num=mysqli_num_rows($result2);
 	$row2 = $result2 -> fetch_assoc();
 	@$trans_id2= stripslashes($row2["id"]);
 	$campaign_id = (int)trim(mysqli_real_escape_string($conn, $_POST['campaign_id']));
 	if(!$trans_id2){
-		$query="UPDATE `vaccine_trans_local` SET `v_date`='$v_date $v_time:00', `timestamp`=NOW(), `cust_id` = '$cust_id', `item_code` = '$item_code', `clinic`='$clinic_id', `outlet_id` = '$outlet_id', `remark` = '$remark', `operator` = '$id_user', `campaign_id` = '$campaign_id', `recycle` = '0' WHERE `vaccine_trans_local`.`id` = '$trans_id'";
+		$query="UPDATE `vaccine_trans` SET `v_date`='$v_date $v_time:00', `timestamp`=NOW(), `cust_id` = '$cust_id', `item_code` = '$item_code', `clinic`='$clinic_id', `outlet_id` = '$outlet_id', `remark` = '$remark', `operator` = '$id_user', `campaign_id` = '$campaign_id', `recycle` = '0' WHERE `vaccine_trans`.`id` = '$trans_id'";
 		$result=mysqli_query($conn, $query);
 		redirect("vaccine_index.php");
 	} else {
@@ -54,7 +54,7 @@ if(isset($_POST['submit'])){
 	}
 } else {
 $trans_id = trim(mysqli_real_escape_string($conn,$_GET['id']));
-$query="SELECT `v_date`, `cust_id`, `item_code`, `vaccine_clinic`.`clinic`, `vaccine_clinic`.`dr_name`, `vaccine_clinic`.`id` as `clinic_id`, `batch_num`, `expiry_date`, `remark`, `status`, `operator`, `v_date`, `outlet_id`, `vaccine_clinic`.`clinic`, `dr_name` FROM `vaccine_trans_local` left join vaccine_clinic on vaccine_trans_local.clinic=vaccine_clinic.id where `vaccine_trans_local`.`recycle`=0 and `vaccine_trans_local`.`id`='$trans_id' limit 0,1";
+$query="SELECT `v_date`, `cust_id`, `item_code`, `vaccine_clinic`.`clinic`, `vaccine_clinic`.`dr_name`, `vaccine_clinic`.`id` as `clinic_id`, `batch_num`, `expiry_date`, `remark`, `status`, `operator`, `v_date`, `outlet_id`, `vaccine_clinic`.`clinic`, `dr_name` FROM `vaccine_trans` left join vaccine_clinic on vaccine_trans.clinic=vaccine_clinic.id where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`id`='$trans_id' limit 0,1";
 $result=mysqli_query($conn, $query);
 $num = mysqli_num_rows ($result);
 $row = $result -> fetch_assoc();

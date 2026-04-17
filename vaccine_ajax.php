@@ -117,7 +117,7 @@ $column_name=trim(mysqli_real_escape_string($conn,$_GET['n']));
 if($column_name){
 $column_value=trim(mysqli_real_escape_string($conn,$_GET['v']));
 $trans_id=trim(mysqli_real_escape_string($conn,$_GET['t_id']));
-$query="update vaccine_trans_local set `$column_name`='$column_value' where id='$trans_id'";
+$query="update vaccine_trans set `$column_name`='$column_value' where id='$trans_id'";
 $result=mysqli_query($conn, $query);
 echo "<span class='message'><img src='../common/img/save.png'></span>";
 }

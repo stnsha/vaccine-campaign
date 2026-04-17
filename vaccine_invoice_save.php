@@ -59,7 +59,7 @@ foreach ($rows as $idx => $row) {
     }
 
     // Check duplicate
-    $sql2 = "SELECT id FROM vaccine_trans_local WHERE outlet_id='$outlet_id' AND v_date='$v_date' AND cust_id='$cust_id' AND item_code='$item_code' AND recycle=0";
+    $sql2 = "SELECT id FROM vaccine_trans WHERE outlet_id='$outlet_id' AND v_date='$v_date' AND cust_id='$cust_id' AND item_code='$item_code' AND recycle=0";
     $result2 = mysqli_query($conn, $sql2);
     if (mysqli_num_rows($result2) > 0) {
         $errors[] = "Row $idx: Duplicate transaction for customer $customer_name.";
@@ -79,7 +79,7 @@ foreach ($rows as $idx => $row) {
     }
 
     // Insert transaction (default time 00:00)
-    $query = "INSERT INTO vaccine_trans_local (id, timestamp, v_date, cust_id, item_code, clinic, outlet_id, remark, status, operator, inv_num, campaign_id) VALUES (NULL, NOW(), '$v_date 00:00:00', '$cust_id', '$item_code', '$clinic_id', '$outlet_id', '$remark', '0', '$id_user', '$inv_num', '$campaign_id')";
+    $query = "INSERT INTO vaccine_trans (id, timestamp, v_date, cust_id, item_code, clinic, outlet_id, remark, status, operator, inv_num, campaign_id) VALUES (NULL, NOW(), '$v_date 00:00:00', '$cust_id', '$item_code', '$clinic_id', '$outlet_id', '$remark', '0', '$id_user', '$inv_num', '$campaign_id')";
     $result = mysqli_query($conn, $query);
 
     if ($result) {

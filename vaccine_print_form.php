@@ -106,7 +106,7 @@ if($print_type=='1'){
 			<td class="report-content-cell">
 	<?php
 		//form clinic_array
-		$query2="SELECT clinic, outlet_id FROM `vaccine_trans_local` where `vaccine_trans_local`.`recycle`=0 and `vaccine_trans_local`.`id` in ($per_print_list) and status=0 group by clinic";
+		$query2="SELECT clinic, outlet_id FROM `vaccine_trans` where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`id` in ($per_print_list) and status=0 group by clinic";
 		$result2=mysqli_query($conn,$query2);
 		$num2 = mysqli_num_rows($result2);
 		if($num2>0){
@@ -159,7 +159,7 @@ if($print_type=='1'){
 				<th width='5%'>Outlet</th>
 			</tr>
 			<?php
-			$query="SELECT `vaccine_trans_local`.`id`, `vaccine_trans_local`.`timestamp`, `vaccine_trans_local`.`cust_id`, `vaccine_trans_local`.`item_code`, `vaccine_trans_local`.`batch_num`, `vaccine_trans_local`.`expiry_date`, `vaccine_trans_local`.`status`, `vaccine_trans_local`.`v_date`, `vaccine_trans_local`.`outlet_id` FROM `vaccine_trans_local` where `vaccine_trans_local`.`recycle`=0 and `vaccine_trans_local`.`id` in ($per_print_list) and `vaccine_trans_local`.`status`=0 and `vaccine_trans_local`.`clinic`='$clinic_id' order by vaccine_trans_local.v_date, vaccine_trans_local.outlet_id, vaccine_trans_local.cust_id";
+			$query="SELECT `vaccine_trans`.`id`, `vaccine_trans`.`timestamp`, `vaccine_trans`.`cust_id`, `vaccine_trans`.`item_code`, `vaccine_trans`.`batch_num`, `vaccine_trans`.`expiry_date`, `vaccine_trans`.`status`, `vaccine_trans`.`v_date`, `vaccine_trans`.`outlet_id` FROM `vaccine_trans` where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`id` in ($per_print_list) and `vaccine_trans`.`status`=0 and `vaccine_trans`.`clinic`='$clinic_id' order by vaccine_trans.v_date, vaccine_trans.outlet_id, vaccine_trans.cust_id";
 			$result=mysqli_query($conn,$query);
 			$num = mysqli_num_rows ($result);
 			if ($num > 0 ) {

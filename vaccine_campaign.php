@@ -57,7 +57,7 @@ $trans_query = "SELECT vt.id, vt.status, vt.remark, vt.inv_num, vt.item_code,
                 c.customer_name, c.ic,
                 s.nama_staff AS operator_name,
                 si.name AS item_name
-                FROM vaccine_trans_local vt
+                FROM vaccine_trans vt
                 LEFT JOIN customer c ON vt.cust_id = c.id
                 LEFT JOIN staff s ON vt.operator = s.id
                 LEFT JOIN simple si ON vt.item_code = si.item_code

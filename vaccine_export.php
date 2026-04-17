@@ -13,7 +13,7 @@ while ($row3 = $result3->fetch_assoc()) {
 	$outlet_arr[$id]=$code;
 }}
 
-$query2="SELECT clinic, GROUP_CONCAT( DISTINCT outlet_id ORDER BY outlet_id ) AS outlets FROM vaccine_trans_local GROUP BY clinic";
+$query2="SELECT clinic, GROUP_CONCAT( DISTINCT outlet_id ORDER BY outlet_id ) AS outlets FROM vaccine_trans GROUP BY clinic";
 $result2=mysqli_query($conn,$query2);
 $num2 = mysqli_num_rows ($result2);
 $clnic_arr=array();

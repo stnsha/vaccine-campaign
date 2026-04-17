@@ -87,7 +87,7 @@ $date_start = trim(mysqli_real_escape_string($conn,$_REQUEST['s']));
 $date_end = trim(mysqli_real_escape_string($conn,$_REQUEST['e']));
 $outlet_id = trim(mysqli_real_escape_string($conn,$_REQUEST['o']));
 $status = trim(mysqli_real_escape_string($conn,$_REQUEST['status']));
-if($status || $status==0){$option2="and `vaccine_trans_local`.`status`='$status'";}
+if($status || $status==0){$option2="and `vaccine_trans`.`status`='$status'";}
 $type = trim(mysqli_real_escape_string($conn,$_REQUEST['type']));
 
 if($vaccine_autho=='1'){
@@ -171,8 +171,8 @@ $outlet.="$o_id";} else {$outlet.=",$o_id";}
 			</tr>
 			<tbody>
 			<?php
-			if($outlet_id){$option="and `vaccine_trans_local`.`outlet_id`='$outlet_id'";} else {$option="and `vaccine_trans_local`.`outlet_id` in ($outlet)";}
-			$query="SELECT `vaccine_trans_local`.`id`, `vaccine_trans_local`.`timestamp`, `vaccine_trans_local`.`cust_id`, `vaccine_trans_local`.`item_code`, `vaccine_trans_local`.`remark`, `vaccine_trans_local`.`status`, `vaccine_trans_local`.`operator`, `vaccine_trans_local`.`v_date`, `vaccine_trans_local`.`outlet_id`, `vaccine_clinic`.`clinic`, `vaccine_clinic`.`dr_name` FROM `vaccine_trans_local` left join vaccine_clinic on vaccine_trans_local.clinic=vaccine_clinic.id where `vaccine_trans_local`.`recycle`=0 and `vaccine_trans_local`.`v_date` between '$date_start 00:00:00' and '$date_end 23:59:59' $option $option2 order by vaccine_trans_local.v_date, vaccine_trans_local.outlet_id, vaccine_trans_local.cust_id";
+			if($outlet_id){$option="and `vaccine_trans`.`outlet_id`='$outlet_id'";} else {$option="and `vaccine_trans`.`outlet_id` in ($outlet)";}
+			$query="SELECT `vaccine_trans`.`id`, `vaccine_trans`.`timestamp`, `vaccine_trans`.`cust_id`, `vaccine_trans`.`item_code`, `vaccine_trans`.`remark`, `vaccine_trans`.`status`, `vaccine_trans`.`operator`, `vaccine_trans`.`v_date`, `vaccine_trans`.`outlet_id`, `vaccine_clinic`.`clinic`, `vaccine_clinic`.`dr_name` FROM `vaccine_trans` left join vaccine_clinic on vaccine_trans.clinic=vaccine_clinic.id where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`v_date` between '$date_start 00:00:00' and '$date_end 23:59:59' $option $option2 order by vaccine_trans.v_date, vaccine_trans.outlet_id, vaccine_trans.cust_id";
 			$result=mysqli_query($conn,$query);
 			$num = mysqli_num_rows ($result);
 			if ($num > 0 ) {

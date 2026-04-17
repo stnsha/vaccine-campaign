@@ -310,7 +310,7 @@ $query = "SELECT vc.id,
           FROM vaccine_campaign vc
           LEFT JOIN outlet o ON vc.outlets = o.id
           LEFT JOIN vaccine_clinic vcl ON vc.clinic = vcl.id
-          LEFT JOIN vaccine_trans_local vt ON vt.outlet_id = vc.outlets AND DATE(vt.v_date) = vc.v_date AND vt.recycle = 0
+          LEFT JOIN vaccine_trans vt ON vt.outlet_id = vc.outlets AND DATE(vt.v_date) = vc.v_date AND vt.recycle = 0
           WHERE vc.v_date >= '$year-$month-01'
             AND vc.v_date < DATE_ADD('$year-$month-01', INTERVAL 1 MONTH)
             $option

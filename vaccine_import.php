@@ -185,7 +185,7 @@ if ($fileSize > 0) {
 
 					if($insert==1){
 						//prevent duplication
-						$sql2="select id from `vaccine_trans_local` where `outlet_id`='$outlet_id' and `v_date`='$v_date' and `cust_id`='$cust_id' and `item_code`='$item_code' and recycle=0";
+						$sql2="select id from `vaccine_trans` where `outlet_id`='$outlet_id' and `v_date`='$v_date' and `cust_id`='$cust_id' and `item_code`='$item_code' and recycle=0";
 						$result2 = mysqli_query($conn, $sql2);
 						$num=mysqli_num_rows($result2);
 						$row2 = $result2 -> fetch_assoc();
@@ -214,7 +214,7 @@ if ($fileSize > 0) {
 							$item_code_esc = mysqli_real_escape_string($conn, $item_code);
 							$batch_num_esc = mysqli_real_escape_string($conn, $batch_num);
 							$remark_esc = mysqli_real_escape_string($conn, $remark);
-							$query="INSERT INTO `vaccine_trans_local` (`id`, `timestamp`, `v_date`, `cust_id`, `item_code`, `clinic`, `batch_num`, `expiry_date`, `outlet_id`, `remark`, `status`, `operator`, `campaign_id`) VALUES (NULL, NOW(), '$v_date', '$cust_id', '$item_code_esc', '$clinic_id', '$batch_num_esc', '$expiry_date', '$outlet_id', '$remark_esc', '0', '$id_user', '$campaign_id')";
+							$query="INSERT INTO `vaccine_trans` (`id`, `timestamp`, `v_date`, `cust_id`, `item_code`, `clinic`, `batch_num`, `expiry_date`, `outlet_id`, `remark`, `status`, `operator`, `campaign_id`) VALUES (NULL, NOW(), '$v_date', '$cust_id', '$item_code_esc', '$clinic_id', '$batch_num_esc', '$expiry_date', '$outlet_id', '$remark_esc', '0', '$id_user', '$campaign_id')";
 							$result=mysqli_query($conn, $query);
 							if($result){$succeed++;} else {$failed++;}
 						} else {

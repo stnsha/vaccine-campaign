@@ -31,8 +31,8 @@ require_once('../lock_adv.php');
 $connect=1;
 include ('../common/index_adv.php');
 
-//search latest date by clinic from vaccine_trans_local
-$query3="SELECT clinic, MAX(v_date) AS latest_date FROM vaccine_trans_local GROUP BY clinic";
+//search latest date by clinic from vaccine_trans
+$query3="SELECT clinic, MAX(v_date) AS latest_date FROM vaccine_trans GROUP BY clinic";
 $result3=mysqli_query($conn, $query3);
 $num3 = mysqli_num_rows ($result3);
 $clinic_arr=array();
