@@ -5,6 +5,7 @@ $connect=1;
 include ('../common/index_adv.php');
 
 $v_date=trim(mysqli_real_escape_string($conn,$_POST['v_date']));
+$session_outlet = $outlet; // preserve session value before POST overwrite
 $outlet=$_POST['outlet'];
 $clinic_id=$_POST['clinic'];
 
@@ -15,6 +16,15 @@ if($vaccine_autho=='1') {
 } else {
 	$type = '2';
 	$initial_status = '1';
+
+	// Server-side enforcement: outlet staff may only create campaigns for their own outlets
+	$allowed_outlets = array_map('trim', explode(',', $session_outlet));
+	foreach($outlet as $o_id) {
+		if(!in_array(trim($o_id), $allowed_outlets)) {
+			redirect("vaccine_calendar.php");
+			exit;
+		}
+	}
 }
 
 $last_id = 0;
