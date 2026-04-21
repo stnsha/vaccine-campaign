@@ -46,14 +46,14 @@ $clinic_arr[$clinic_id]=$latest_date;
 //reactivate
 if(isset($_GET['r'])){
 	$reactivate_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
-	$query2="update `vaccine_clinic` set `recycle`=0 where `id`='$reactivate_id'";
+	$query2="update `gp_clinics` set `is_active`=1 where `id`='$reactivate_id'";
 	$result2=mysqli_query($conn, $query2);
 }
 
 //delete
 if(isset($_GET['d'])){
 	$del_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
-	$query2="update `vaccine_clinic` set `recycle`=1 where `id`='$del_id'";
+	$query2="update `gp_clinics` set `is_active`=0 where `id`='$del_id'";
 	$result2=mysqli_query($conn, $query2);
 }
 
@@ -66,7 +66,7 @@ if($clinic_id){
 	$option="and `id`='$clinic_id'";
 } else
 if($key){
-	$option="and (`clinic` like '%$key%' or `address` like '%$key%' or `dr_name` like '%$key%')";
+	$option="and (`name` like '%$key%' or `address` like '%$key%' or `dr_name` like '%$key%')";
 	}
 }
 
@@ -78,7 +78,7 @@ if (isset($_REQUEST['pageno'])) {
 }
 
 //Search total page no
-$query = "SELECT count(*) FROM  `vaccine_clinic` WHERE `recycle`='0' $option";
+$query = "SELECT count(*) FROM  `gp_clinics` WHERE `is_active`='1' $option";
 $result = mysqli_query($conn, $query) or die(mysqli_error($conn));
 $num_rows = mysqli_fetch_row($result);
 $numrows = $num_rows[0];
@@ -98,7 +98,7 @@ if ($pageno < 1) {
 //limit
 $limit = 'LIMIT ' .($pageno - 1) * $rows_per_page .',' .$rows_per_page;
 
-$query="SELECT * FROM  `vaccine_clinic` WHERE `recycle`='0' $option order by `clinic` $limit";
+$query="SELECT * FROM  `gp_clinics` WHERE `is_active`='1' $option order by `name` $limit";
 $result=mysqli_query($conn, $query);
 $num = mysqli_num_rows ($result);
 ?>
@@ -166,8 +166,8 @@ if ($num > 0 ) {
 $i=0;
 while ($row = $result->fetch_assoc()) {
 $clinic_id = stripslashes($row['id']);
-$clinic = stripslashes($row['clinic']);
-$c_phone = stripslashes($row['c_phone']);
+$clinic = stripslashes($row['name']);
+$c_phone = stripslashes($row['phone_1']);
 $dr_name = stripslashes($row['dr_name']);
 $address = stripslashes($row['address']);
 

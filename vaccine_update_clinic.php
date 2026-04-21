@@ -9,17 +9,19 @@ if(isset($_POST['submit'])){
 	$clinic=trim(mysqli_real_escape_string($conn,$_POST['clinic']));
 	$clinic=ucwords(strtolower($clinic));
 	$c_phone=trim(mysqli_real_escape_string($conn,$_POST['c_phone']));
+	$phone_2=trim(mysqli_real_escape_string($conn,$_POST['phone_2']));
+	$email=trim(mysqli_real_escape_string($conn,$_POST['email']));
 	$dr_name=trim(mysqli_real_escape_string($conn,$_POST['dr_name']));
 	$dr_name=ucwords(strtolower($dr_name));
 	$address=trim(mysqli_real_escape_string($conn,$_POST['address']));
 	//avoid duplicate
-	$query2="SELECT count(id) as count FROM `vaccine_clinic` where `clinic`='$clinic' and `c_phone`='$c_phone' and id!='$clinic_id' and recycle=0 limit 0,1";
+	$query2="SELECT count(id) as count FROM `gp_clinics` where `name`='$clinic' and `phone_1`='$c_phone' and id!='$clinic_id' and is_active=1 limit 0,1";
 	$result2=mysqli_query($conn,$query2);
 	$row2 = $result2 -> fetch_assoc();
 	@$count = stripslashes($row2['count']);
 
 	if($count==0){
-		$query3="UPDATE `vaccine_clinic` SET `clinic` = '$clinic', `c_phone` = '$c_phone', `dr_name` = '$dr_name', `address` = '$address' WHERE `vaccine_clinic`.`id` = $clinic_id;";
+		$query3="UPDATE `gp_clinics` SET `name` = '$clinic', `phone_1` = '$c_phone', `phone_2` = '$phone_2', `email` = '$email', `dr_name` = '$dr_name', `address` = '$address' WHERE `gp_clinics`.`id` = $clinic_id;";
 		echo $query3;
 		$result3=mysqli_query($conn, $query3);
 		if($result3){
@@ -30,12 +32,14 @@ if(isset($_POST['submit'])){
 	}
 } else {
 $clinic_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
-$query="SELECT * FROM  `vaccine_clinic` WHERE `id`='$clinic_id'";
+$query="SELECT * FROM  `gp_clinics` WHERE `id`='$clinic_id'";
 $result=mysqli_query($conn, $query);
 $row = $result -> fetch_assoc();
-@$clinic= stripslashes($row["clinic"]);
+@$clinic= stripslashes($row["name"]);
+@$c_phone= stripslashes($row["phone_1"]);
+@$phone_2= stripslashes($row["phone_2"]);
+@$email= stripslashes($row["email"]);
 @$dr_name= stripslashes($row["dr_name"]);
-@$c_phone= stripslashes($row["c_phone"]);
 @$address= stripslashes($row["address"]);
 ?>
 <script type="text/javascript">
@@ -79,19 +83,31 @@ $row = $result -> fetch_assoc();
 			<tr>
 				<th width='150px' align='right'><b>Clinic Name : </b></th>
 				<td>
-					<input id='clinic' name='clinic' value='<?php echo $clinic; ?>' required autofocus onkeydown="return tabOnEnter(this,event)" maxlength='100' />
+					<input id='clinic' name='clinic' value='<?php echo $clinic; ?>' required autofocus onkeydown="return tabOnEnter(this,event)" maxlength='255' />
 				</td>
 			</tr>
 			<tr>
-				<th align='right'><b>Clinic's <br/>Contact : </b></th>
+				<th align='right'><b>Phone 1 : </b></th>
 				<td>
-					<input id='c_phone' name='c_phone' placeholder="Phone Num" size='15' value='<?php echo $c_phone; ?>' autocomplete="off" onkeydown="return tabOnEnter(this,event)" required />
+					<input id='c_phone' name='c_phone' placeholder="Phone Num" size='15' value='<?php echo $c_phone; ?>' autocomplete="off" onkeydown="return tabOnEnter(this,event)" maxlength='12' required />
+				</td>
+			</tr>
+			<tr>
+				<th align='right'><b>Phone 2 : </b></th>
+				<td>
+					<input type='text' name='phone_2' placeholder="Phone Num" size='15' value='<?php echo $phone_2; ?>' autocomplete="off" onkeydown="return tabOnEnter(this,event)" maxlength='12' />
+				</td>
+			</tr>
+			<tr>
+				<th align='right'><b>Email : </b></th>
+				<td>
+					<input type='email' name='email' size='30' value='<?php echo $email; ?>' autocomplete="off" onkeydown="return tabOnEnter(this,event)" maxlength='25' />
 				</td>
 			</tr>
 			<tr>
 				<th align='right'><b>Doctor In Charge : </b></th>
 				<td colspan='3'>
-					<input type='text' name='dr_name' value='<?php echo $dr_name; ?>' onkeydown="return tabOnEnter(this,event)" required maxlength='50' />
+					<input type='text' name='dr_name' value='<?php echo $dr_name; ?>' onkeydown="return tabOnEnter(this,event)" required maxlength='255' />
 				</td>
 			</tr>
 			<tr>

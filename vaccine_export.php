@@ -25,7 +25,7 @@ if ($num2 > 0 ) {
     }
 }
 
-$query="SELECT * FROM  `vaccine_clinic` WHERE `recycle`='0' order by `clinic`";
+$query="SELECT * FROM  `gp_clinics` WHERE `is_active`='1' order by `name`";
 $result=mysqli_query($conn,$query);
 $num = mysqli_num_rows ($result);
 
@@ -51,8 +51,8 @@ $n=0;
 	while ($row = $result->fetch_assoc()) {
 	$timestamp = stripslashes($row['timestamp']);
 	$clinic_id = stripslashes($row['id']);
-	$clinic = stripslashes($row['clinic']);
-	$c_phone = stripslashes($row['c_phone']);
+	$clinic = stripslashes($row['name']);
+	$c_phone = stripslashes($row['phone_1']);
 	$dr_name = stripslashes($row['dr_name']);
 	$address = stripslashes($row['address']);
 		if (!empty($clinic_arr[$clinic_id]) && is_array($clinic_arr[$clinic_id])) {

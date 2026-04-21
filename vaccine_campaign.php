@@ -10,10 +10,10 @@ $campaign_id = trim(mysqli_real_escape_string($conn, $_REQUEST['id']));
 $query = "SELECT vc.id, vc.v_date, vc.outlets AS outlet_id, vc.type, vc.status,
           vc.clinic AS clinic_id,
           o.code AS outlet_code, o.company AS outlet_name,
-          vcl.clinic, vcl.dr_name, vcl.c_phone, vcl.address
+          vcl.name, vcl.dr_name, vcl.phone_1, vcl.address
           FROM vaccine_campaign vc
           LEFT JOIN outlet o ON vc.outlets = o.id
-          LEFT JOIN vaccine_clinic vcl ON vc.clinic = vcl.id
+          LEFT JOIN gp_clinics vcl ON vc.clinic = vcl.id
           WHERE vc.id='$campaign_id'";
 $result = mysqli_query($conn, $query);
 
@@ -138,7 +138,7 @@ if(isset($_GET['updated']) && $_GET['updated'] == '1') {
         </tr>
         <tr>
             <td><b>Clinic:</b></td>
-            <td><?php echo $campaign['clinic']; ?></td>
+            <td><?php echo $campaign['name']; ?></td>
         </tr>
         <tr>
             <td><b>Doctor:</b></td>
@@ -146,7 +146,7 @@ if(isset($_GET['updated']) && $_GET['updated'] == '1') {
         </tr>
         <tr>
             <td><b>Clinic Contact:</b></td>
-            <td><?php echo $campaign['c_phone']; ?></td>
+            <td><?php echo $campaign['phone_1']; ?></td>
         </tr>
         <tr>
             <td><b>Clinic Address:</b></td>

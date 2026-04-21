@@ -172,7 +172,7 @@ $outlet.="$o_id";} else {$outlet.=",$o_id";}
 			<tbody>
 			<?php
 			if($outlet_id){$option="and `vaccine_trans`.`outlet_id`='$outlet_id'";} else {$option="and `vaccine_trans`.`outlet_id` in ($outlet)";}
-			$query="SELECT `vaccine_trans`.`id`, `vaccine_trans`.`timestamp`, `vaccine_trans`.`cust_id`, `vaccine_trans`.`item_code`, `vaccine_trans`.`remark`, `vaccine_trans`.`status`, `vaccine_trans`.`operator`, `vaccine_trans`.`v_date`, `vaccine_trans`.`outlet_id`, `vaccine_clinic`.`clinic`, `vaccine_clinic`.`dr_name` FROM `vaccine_trans` left join vaccine_clinic on vaccine_trans.clinic=vaccine_clinic.id where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`v_date` between '$date_start 00:00:00' and '$date_end 23:59:59' $option $option2 order by vaccine_trans.v_date, vaccine_trans.outlet_id, vaccine_trans.cust_id";
+			$query="SELECT `vaccine_trans`.`id`, `vaccine_trans`.`timestamp`, `vaccine_trans`.`cust_id`, `vaccine_trans`.`item_code`, `vaccine_trans`.`remark`, `vaccine_trans`.`status`, `vaccine_trans`.`operator`, `vaccine_trans`.`v_date`, `vaccine_trans`.`outlet_id`, `gp_clinics`.`name`, `gp_clinics`.`dr_name` FROM `vaccine_trans` left join gp_clinics on vaccine_trans.clinic=gp_clinics.id where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`v_date` between '$date_start 00:00:00' and '$date_end 23:59:59' $option $option2 order by vaccine_trans.v_date, vaccine_trans.outlet_id, vaccine_trans.cust_id";
 			$result=mysqli_query($conn,$query);
 			$num = mysqli_num_rows ($result);
 			if ($num > 0 ) {
@@ -213,7 +213,7 @@ $outlet.="$o_id";} else {$outlet.=",$o_id";}
 				$row4 = $result4 -> fetch_assoc();
 				@$staff_name= stripslashes($row4["nama_staff"]);
 			$v_date = stripslashes($row['v_date']);
-			$clinic = stripslashes($row['clinic']);
+			$clinic = stripslashes($row['name']);
 			$dr_name = stripslashes($row['dr_name']);
 
 			//calculate numbering asc

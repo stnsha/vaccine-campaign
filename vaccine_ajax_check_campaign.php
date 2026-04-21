@@ -17,9 +17,9 @@ if(!$outlet_id || !$v_date) {
 
 if ($clinic_id > 0) {
     // Clinic already selected: exact match on outlet + date + clinic
-    $q = "SELECT vc.id, vc.v_date, vcl.id as clinic_id, vcl.clinic, vcl.dr_name
+    $q = "SELECT vc.id, vc.v_date, vcl.id as clinic_id, vcl.name, vcl.dr_name
           FROM vaccine_campaign vc
-          LEFT JOIN vaccine_clinic vcl ON vc.clinic = vcl.id
+          LEFT JOIN gp_clinics vcl ON vc.clinic = vcl.id
           WHERE vc.outlets='$outlet_id' AND vc.v_date='$v_date' AND vc.clinic='$clinic_id'
           LIMIT 1";
     $r   = mysqli_query($conn, $q);
@@ -30,7 +30,7 @@ if ($clinic_id > 0) {
             'id'        => $row['id'],
             'v_date'    => $row['v_date'],
             'clinic_id' => $row['clinic_id'],
-            'clinic'    => $row['clinic'],
+            'clinic'    => $row['name'],
             'dr_name'   => $row['dr_name']
         ));
     } else {
@@ -38,9 +38,9 @@ if ($clinic_id > 0) {
     }
 } else {
     // No clinic selected: check how many campaigns exist for this outlet+date
-    $q    = "SELECT vc.id, vc.v_date, vcl.id as clinic_id, vcl.clinic, vcl.dr_name
+    $q    = "SELECT vc.id, vc.v_date, vcl.id as clinic_id, vcl.name, vcl.dr_name
              FROM vaccine_campaign vc
-             LEFT JOIN vaccine_clinic vcl ON vc.clinic = vcl.id
+             LEFT JOIN gp_clinics vcl ON vc.clinic = vcl.id
              WHERE vc.outlets='$outlet_id' AND vc.v_date='$v_date'";
     $r    = mysqli_query($conn, $q);
     $rows = array();
@@ -52,7 +52,7 @@ if ($clinic_id > 0) {
             'id'        => $rows[0]['id'],
             'v_date'    => $rows[0]['v_date'],
             'clinic_id' => $rows[0]['clinic_id'],
-            'clinic'    => $rows[0]['clinic'],
+            'clinic'    => $rows[0]['name'],
             'dr_name'   => $rows[0]['dr_name']
         ));
     } else if ($count > 1) {

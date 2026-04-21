@@ -179,7 +179,7 @@ function draw_calendar($month, $year, $vaccine_campaigns = array(), $conn) {
             foreach($vaccine_campaigns[$vaccine_day] as $campaign) {
                 $campaign_id      = $campaign['id'];
                 $outlet_code      = $campaign['outlet_code'];
-                $clinic           = $campaign['clinic'];
+                $clinic           = $campaign['name'];
                 $dr_name          = $campaign['dr_name'];
                 $customer_count   = $campaign['customer_count'];
                 $vaccinated_count = $campaign['vaccinated_count'];
@@ -303,18 +303,18 @@ $query = "SELECT vc.id,
           vc.type,
           vc.status,
           o.code AS outlet_code,
-          vcl.clinic,
+          vcl.name,
           vcl.dr_name,
           COUNT(vt.id) AS customer_count,
           SUM(CASE WHEN vt.status = 1 THEN 1 ELSE 0 END) AS vaccinated_count
           FROM vaccine_campaign vc
           LEFT JOIN outlet o ON vc.outlets = o.id
-          LEFT JOIN vaccine_clinic vcl ON vc.clinic = vcl.id
+          LEFT JOIN gp_clinics vcl ON vc.clinic = vcl.id
           LEFT JOIN vaccine_trans vt ON vt.outlet_id = vc.outlets AND DATE(vt.v_date) = vc.v_date AND vt.recycle = 0
           WHERE vc.v_date >= '$year-$month-01'
             AND vc.v_date < DATE_ADD('$year-$month-01', INTERVAL 1 MONTH)
             $option
-          GROUP BY vc.id, vc.v_date, vc.outlets, vc.type, vc.status, o.code, vcl.clinic, vcl.dr_name
+          GROUP BY vc.id, vc.v_date, vc.outlets, vc.type, vc.status, o.code, vcl.name, vcl.dr_name
           ORDER BY vc.v_date";
 $result = mysqli_query($conn, $query) or die(mysqli_error($conn));
 while($row = mysqli_fetch_assoc($result)) {

@@ -128,11 +128,11 @@ if(!$edit_allowed) {
 				<select name='clinic' required>
 				<option value=''>Pick One</option>
 				<?php
-				$query4="SELECT `id`, `dr_name`, `clinic` FROM  `vaccine_clinic` where recycle=0";
+				$query4="SELECT `id`, `dr_name`, `name` FROM  `gp_clinics` where is_active=1";
 				$result4 = mysqli_query($conn,$query4);
 					while($nt=mysqli_fetch_array($result4)){
 					if($clinic==$nt[id]){$s='selected';} else {$s='';}
-					echo "<option $s value='$nt[id]'>$nt[clinic] - $nt[dr_name]</option>";
+					echo "<option $s value='$nt[id]'>$nt[name] - $nt[dr_name]</option>";
 					}
 				?>
 				</select>

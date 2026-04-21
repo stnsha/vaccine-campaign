@@ -134,11 +134,11 @@ if($print_type=='1'){
 			$addr=nl2br(trim($addr));
 
 			//search clinic info
-			$query3="SELECT * FROM `vaccine_clinic` WHERE `id`='$clinic_id' limit 0,1";
+			$query3="SELECT * FROM `gp_clinics` WHERE `id`='$clinic_id' limit 0,1";
 			$result3 = mysqli_query($conn, $query3);
 			$row3 = $result3 -> fetch_assoc();
-			@$clinic= stripslashes($row3["clinic"]);
-			@$c_phone= stripslashes($row3["c_phone"]);
+			@$clinic= stripslashes($row3["name"]);
+			@$c_phone= stripslashes($row3["phone_1"]);
 			@$dr_name= stripslashes($row3["dr_name"]);
 			@$address= stripslashes($row3["address"]);
 			$address=nl2br(trim($address));

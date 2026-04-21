@@ -8,17 +8,19 @@ if(isset($_POST['submit'])){
 	$clinic=trim(mysqli_real_escape_string($conn,$_POST['clinic']));
 	$clinic=ucwords(strtolower($clinic));
 	$c_phone=trim(mysqli_real_escape_string($conn,$_POST['c_phone']));
+	$phone_2=trim(mysqli_real_escape_string($conn,$_POST['phone_2']));
+	$email=trim(mysqli_real_escape_string($conn,$_POST['email']));
 	$dr_name=trim(mysqli_real_escape_string($conn,$_POST['dr_name']));
 	$dr_name=ucwords(strtolower($dr_name));
 	$c_address=trim(mysqli_real_escape_string($conn,$_POST['c_address']));
 	//avoid duplicate
-	$query2="SELECT count(id) as count FROM `vaccine_clinic` where `clinic`='$clinic' and `c_phone`='$c_phone' and recycle=0 limit 0,1";
+	$query2="SELECT count(id) as count FROM `gp_clinics` where `name`='$clinic' and `phone_1`='$c_phone' and is_active=1 limit 0,1";
 	$result2=mysqli_query($conn,$query2);
 	$row2 = $result2 -> fetch_assoc();
 	@$count = stripslashes($row2['count']);
 
 	if($count==0){
-		$query3="INSERT INTO `vaccine_clinic` (`id`, `clinic`, `c_phone`, `dr_name`, `address`, `recycle`) VALUES (NULL, '$clinic', '$c_phone', '$dr_name', '$c_address', '0')";
+		$query3="INSERT INTO `gp_clinics` (`id`, `name`, `phone_1`, `phone_2`, `email`, `dr_name`, `address`, `is_active`) VALUES (NULL, '$clinic', '$c_phone', '$phone_2', '$email', '$dr_name', '$c_address', '1')";
 		$result3=mysqli_query($conn, $query3);
 		if($result3){
 			redirect('vaccine_index_clinic.php');
@@ -69,19 +71,31 @@ if(isset($_POST['submit'])){
 			<tr>
 				<th width='150px' align='right'><b>Clinic Name : </b></th>
 				<td>
-					<input id='clinic' name='clinic' required autofocus onkeydown="return tabOnEnter(this,event)" maxlength='100' />
+					<input id='clinic' name='clinic' required autofocus onkeydown="return tabOnEnter(this,event)" maxlength='255' />
 				</td>
 			</tr>
 			<tr>
-				<th align='right'><b>Clinic's <br/>Contact : </b></th>
+				<th align='right'><b>Phone 1 : </b></th>
 				<td>
-					<input id='c_phone' name='c_phone' placeholder="Phone Num" size='15' autocomplete="off" onkeydown="return tabOnEnter(this,event)" required />
+					<input id='c_phone' name='c_phone' placeholder="Phone Num" size='15' autocomplete="off" onkeydown="return tabOnEnter(this,event)" maxlength='12' required />
+				</td>
+			</tr>
+			<tr>
+				<th align='right'><b>Phone 2 : </b></th>
+				<td>
+					<input type='text' name='phone_2' placeholder="Phone Num" size='15' autocomplete="off" onkeydown="return tabOnEnter(this,event)" maxlength='12' />
+				</td>
+			</tr>
+			<tr>
+				<th align='right'><b>Email : </b></th>
+				<td>
+					<input type='email' name='email' size='30' autocomplete="off" onkeydown="return tabOnEnter(this,event)" maxlength='25' />
 				</td>
 			</tr>
 			<tr>
 				<th align='right'><b>Doctor In Charge : </b></th>
 				<td colspan='3'>
-					<input type='text' name='dr_name' onkeydown="return tabOnEnter(this,event)" required maxlength='50' />
+					<input type='text' name='dr_name' onkeydown="return tabOnEnter(this,event)" required maxlength='255' />
 				</td>
 			</tr>
 			<tr>

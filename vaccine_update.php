@@ -54,7 +54,7 @@ if(isset($_POST['submit'])){
 	}
 } else {
 $trans_id = trim(mysqli_real_escape_string($conn,$_GET['id']));
-$query="SELECT `v_date`, `cust_id`, `item_code`, `vaccine_clinic`.`clinic`, `vaccine_clinic`.`dr_name`, `vaccine_clinic`.`id` as `clinic_id`, `batch_num`, `expiry_date`, `remark`, `status`, `operator`, `v_date`, `outlet_id`, `vaccine_clinic`.`clinic`, `dr_name` FROM `vaccine_trans` left join vaccine_clinic on vaccine_trans.clinic=vaccine_clinic.id where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`id`='$trans_id' limit 0,1";
+$query="SELECT `v_date`, `cust_id`, `item_code`, `gp_clinics`.`name`, `gp_clinics`.`dr_name`, `gp_clinics`.`id` as `clinic_id`, `batch_num`, `expiry_date`, `remark`, `status`, `operator`, `v_date`, `outlet_id`, `gp_clinics`.`name`, `dr_name` FROM `vaccine_trans` left join gp_clinics on vaccine_trans.clinic=gp_clinics.id where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`id`='$trans_id' limit 0,1";
 $result=mysqli_query($conn, $query);
 $num = mysqli_num_rows ($result);
 $row = $result -> fetch_assoc();
@@ -77,7 +77,7 @@ $camp_r = mysqli_query($conn, $camp_q);
 $camp_row = $camp_r ? mysqli_fetch_assoc($camp_r) : null;
 $linked_campaign_id = $camp_row ? $camp_row['id'] : '';
 @$clinic_id= stripslashes($row["clinic_id"]);
-@$clinic= stripslashes($row["clinic"]);
+@$clinic= stripslashes($row["name"]);
 @$dr_name= stripslashes($row["dr_name"]);
 @$selected_item_code= stripslashes($row["item_code"]);
 //search for vaccine type by selected item code

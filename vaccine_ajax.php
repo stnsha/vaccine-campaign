@@ -67,7 +67,7 @@ echo "<img src='../common/img/tick.png' title='Ok'>|$phone_parts[0]|$ic|$custome
 //search for campaign and clinic
 $outlet_id=trim(mysqli_real_escape_string($conn,$_GET['id']));
 if($outlet_id){
-	$query = "SELECT `vaccine_campaign`.`id`, `v_date`, `vaccine_clinic`.`clinic`, `dr_name` FROM `vaccine_campaign` left join `vaccine_clinic` on `vaccine_campaign`.`clinic`=`vaccine_clinic`.`id` where v_date >= '".date('Y-m-d')."' and `outlets`='$outlet_id' order by `v_date`";
+	$query = "SELECT `vaccine_campaign`.`id`, `v_date`, `gp_clinics`.`name`, `dr_name` FROM `vaccine_campaign` left join `gp_clinics` on `vaccine_campaign`.`clinic`=`gp_clinics`.`id` where v_date >= '".date('Y-m-d')."' and `outlets`='$outlet_id' order by `v_date`";
 	$result = mysqli_query($conn,$query) or die(mysqli_error($conn));
 	$num=mysqli_num_rows($result);
 	if($num==1){$v='selected';} else {$v='';}
@@ -78,7 +78,7 @@ if($outlet_id){
 		while ($row = $result->fetch_assoc()) {
 			$id = stripslashes($row['id']);
 			$v_date = stripslashes($row['v_date']);
-			$clinic = stripslashes($row['clinic']);
+			$clinic = stripslashes($row['name']);
 			$dr_name = stripslashes($row['dr_name']);
 			$dropdown_date.= "<option value='$id' $v>$v_date - $clinic ($dr_name)</option>";
 		}
