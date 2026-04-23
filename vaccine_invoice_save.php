@@ -44,16 +44,16 @@ foreach ($rows as $idx => $row) {
     $phone2 = "$phone2$child_num";
 
     // Update customer phone
-    $sql4 = "UPDATE customer SET phone='$phone2' WHERE customer_name='$customer_name' AND ic='$cust_ic'";
+    $sql4 = "UPDATE customer SET phone='$phone2' WHERE ic='$cust_ic' AND recycle=0";
     mysqli_query($conn, $sql4);
 
     // Get customer ID
-    $sql3 = "SELECT id FROM customer WHERE ic='$cust_ic' AND customer_name='$customer_name' AND recycle=0";
+    $sql3 = "SELECT id FROM customer WHERE ic='$cust_ic' AND recycle=0 LIMIT 1";
     $result3 = mysqli_query($conn, $sql3);
     $row3 = $result3->fetch_assoc();
-    $cust_id = $row3 ? stripslashes($row3['id']) : '';
+    $cust_id = $row3 ? (int)$row3['id'] : 0;
 
-    if (!$cust_id) {
+    if (!$cust_id || $cust_id == 0) {
         $errors[] = "Row $idx: Customer not found in system.";
         continue;
     }
