@@ -52,9 +52,29 @@ $can_cancel = ($can_edit && $days_until >= 0);
 // Acknowledge: outlet staff, HQ campaigns only, status 0→1
 $can_acknowledge = ($camp_type == '1' && $user_has_access && $vaccine_autho != '1' && $camp_status == '0' && $days_until >= 0);
 
+// Handle transaction delete
+if(isset($_GET['d']) && isset($_GET['trans_id']) && $user_has_access) {
+    $del_trans_id = trim(mysqli_real_escape_string($conn, $_GET['trans_id']));
+    $qdel = "UPDATE vaccine_trans SET recycle=1 WHERE id='$del_trans_id'";
+    mysqli_query($conn, $qdel);
+}
+
+// Build company lookup for clinic booking
+$comp_query = "SELECT id, company_name FROM finance_expenses_gl";
+$comp_result = mysqli_query($conn, $comp_query);
+$comp_arr = array();
+if($comp_result) {
+    while($comp_row = mysqli_fetch_assoc($comp_result)) {
+        $comp_arr[$comp_row['id']] = $comp_row['company_name'];
+    }
+}
+$outlet_company  = $campaign['outlet_name'];
+$outlet_code_txt = $campaign['outlet_code'];
+$payment_channel = '('.$outlet_code_txt.') '.(isset($comp_arr[$outlet_company]) ? $comp_arr[$outlet_company] : '');
+
 // Load transactions for this campaign
 $trans_query = "SELECT vt.id, vt.status, vt.remark, vt.inv_num, vt.item_code,
-                c.customer_name, c.ic,
+                c.customer_name, c.ic, c.phone,
                 s.nama_staff AS operator_name,
                 si.name AS item_name
                 FROM vaccine_trans vt
@@ -358,13 +378,14 @@ function updateTransStatus(newStatus, transId) {
     <table border="0" cellpadding="4" cellspacing="1" bgcolor="#EFEFEF" width="100%" class='myTable' id='transTable'>
         <tr>
             <th width='3%'><input type="checkbox" id="chkAll" onclick="checkAll(this, 'table');" checked /></th>
-            <th width='4%'>No.</th>
-            <th width='20%'>Customer</th>
-            <th width='12%'>IC</th>
-            <th width='15%'>Vaccine</th>
-            <th width='10%'>Operator</th>
-            <th width='12%'>Status</th>
-            <th width='20%'>Remark</th>
+            <th width='3%'>No.</th>
+            <th width='18%'>Customer</th>
+            <th width='11%'>IC</th>
+            <th width='13%'>Vaccine</th>
+            <th width='9%'>Operator</th>
+            <th width='11%'>Status</th>
+            <th width='17%'>Remark</th>
+            <th width='7%'>Edit</th>
         </tr>
         <?php
         $n = 1;
@@ -393,10 +414,34 @@ function updateTransStatus(newStatus, transId) {
                 <?php } ?>
             </td>
             <td><?php echo $tr['remark']; ?></td>
+            <td align='center'>
+                <?php
+                $tr_phone_parts = explode('@', isset($tr['phone']) ? $tr['phone'] : '');
+                $tr_hp = preg_replace('/\D/', '', $tr_phone_parts[0]);
+                $tr_inv = isset($tr['inv_num']) ? $tr['inv_num'] : '';
+                ?>
+                <a href="vaccine_update.php?id=<?php echo $tr['id']; ?>" title="Edit"><img src='../common/img/edit.png' width='16px'></a><br>
+                <?php if($user_has_access) { ?>
+                <a href="vaccine_campaign.php?id=<?php echo $campaign_id; ?>&amp;d=1&amp;trans_id=<?php echo $tr['id']; ?>" title="Delete" onclick="return confirm('Are you sure you want to delete this transaction?');"><img src='../common/img/trash.png' width='16px'></a><br>
+                <?php } ?>
+                <a href="#" id="clinicBtn_<?php echo $tr['id']; ?>" title="Book Alpro Clinic Appointment"><img src='../common/img/clinic_logo.png' width='20px'></a>
+                <input type="hidden" id="inv_num_<?php echo $tr['id']; ?>" value="<?php echo htmlspecialchars($tr_inv); ?>">
+                <script>
+                document.getElementById("clinicBtn_<?php echo $tr['id']; ?>").addEventListener("click", function() {
+                    openClinicLink(
+                        <?php echo json_encode($tr['ic']); ?>,
+                        <?php echo json_encode($tr['customer_name']); ?>,
+                        <?php echo json_encode($tr_hp); ?>,
+                        document.getElementById("inv_num_<?php echo $tr['id']; ?>").value,
+                        <?php echo json_encode($payment_channel); ?>
+                    );
+                });
+                </script>
+            </td>
         </tr>
         <?php } ?>
         <tr>
-            <td colspan='8' align='center' style='padding:8px;'>
+            <td colspan='9' align='center' style='padding:8px;'>
                 <select name='print_type'>
                     <option value='1'>Referral Letter</option>
                 </select>
@@ -410,6 +455,46 @@ function updateTransStatus(newStatus, transId) {
     <?php } ?>
 </fieldset>
 
+<script src="https://cdn.jsdelivr.net/npm/jssha/dist/sha256.js"></script>
+<script>
+function openClinicLink(ic, name, phone, receiptNo, paymentChannel) {
+    var errors = [];
+    if (!ic || ic.trim() === "") errors.push("NRIC is missing");
+    if (!name || name.trim() === "") errors.push("Customer name is missing");
+    if (!phone || phone.trim() === "") errors.push("Mobile number is missing");
+    if (errors.length > 0) {
+        alert("Please complete the following before proceeding:\n- " + errors.join("\n- "));
+        return;
+    }
+    receiptNo      = receiptNo ? receiptNo.trim() : "";
+    paymentChannel = paymentChannel ? paymentChannel.trim() : "";
+    var exp      = Math.floor(Date.now() / 30000);
+    var comments = "Referral Case from Octopus Module";
+    var payload  = name + "|" + ic + "|" + phone + "|" + receiptNo + "|" + paymentChannel + "|" + comments + "|" + exp;
+    var secretKey = "octopus2nexus integration";
+    var token    = generateSHA256(payload + secretKey);
+    var headerData = {
+        NRIC: ic,
+        PatientName: name,
+        MobileNo: phone,
+        ReceiptNo: receiptNo,
+        PaymentChannel: paymentChannel,
+        Comments: comments,
+        Exp: exp,
+        Token: token
+    };
+    var headerJson   = JSON.stringify(headerData);
+    var headerBase64 = btoa(unescape(encodeURIComponent(headerJson)));
+    var url = "http://thenexushealth.com/OctopusBookPublicAppointment?header=" + encodeURIComponent(headerBase64);
+    window.open(url, "_blank");
+}
+
+function generateSHA256(message) {
+    var shaObj = new jsSHA("SHA-256", "TEXT");
+    shaObj.update(message);
+    return shaObj.getHash("HEX");
+}
+</script>
 <?php
 $connect=0;
 include('../common/index_adv.php');
