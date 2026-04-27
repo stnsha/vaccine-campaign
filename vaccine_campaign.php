@@ -49,6 +49,13 @@ if($camp_status != '2') {
 // Cancel: same as edit
 $can_cancel = ($can_edit && $days_until >= 0);
 
+// Revert: undo a cancellation; mirrors cancel permission
+$can_revert = false;
+if($camp_status == '2' && $days_until >= 0) {
+    if($camp_type == '1' && $vaccine_autho == '1') { $can_revert = true; }
+    if($camp_type == '2' && $user_has_access)      { $can_revert = true; }
+}
+
 // Acknowledge: outlet staff, HQ campaigns only, status 0→1
 $can_acknowledge = ($camp_type == '1' && $user_has_access && $vaccine_autho != '1' && $camp_status == '0' && $days_until >= 0);
 
@@ -192,6 +199,9 @@ if(isset($_GET['updated']) && $_GET['updated'] == '1') {
                     // Cancelled
                     echo '<img src="../common/img/bclose.png" width="15px"> <b style="color:#CC0000;">Cancelled</b>';
                     echo '<br/><small style="color:#999;">This campaign has been cancelled.</small>';
+                    if($can_revert) {
+                        echo '<br/><a href="javascript:void(0);" onclick="revertCampaign()" class="btn btn-green" style="margin-top:5px; font-size:11px;">Revert Cancellation</a>';
+                    }
 
                 } else if($camp_type == '1' && $vaccine_autho == '1') {
                     // HQ user, HQ campaign: full status control
@@ -329,6 +339,24 @@ function cancelCampaign() {
         }
     };
     xhr.send('action=update_status&campaign_id=<?php echo $campaign_id; ?>&status=2');
+}
+
+function revertCampaign() {
+    if(!confirm('Are you sure you want to revert this cancellation and restore the campaign?')) { return; }
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'vaccine_ajax_update_campaign.php', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            var response = JSON.parse(xhr.responseText);
+            if(response.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + response.message);
+            }
+        }
+    };
+    xhr.send('action=revert_status&campaign_id=<?php echo $campaign_id; ?>');
 }
 
 function checkAll(checkbox, location) {

@@ -53,6 +53,32 @@ if($action == 'update_status') {
     } else {
         echo json_encode(array('success'=>false, 'message'=>mysqli_error($conn)));
     }
+} else if($action == 'revert_status') {
+    if($current_status != '2') {
+        echo json_encode(array('success'=>false, 'message'=>'Campaign is not cancelled.'));
+        mysqli_close($conn);
+        exit;
+    }
+
+    $can_revert = false;
+    if($camp_type == '1' && $vaccine_autho == '1') { $can_revert = true; }
+    if($camp_type == '2' && $user_has_access)      { $can_revert = true; }
+
+    if(!$can_revert) {
+        echo json_encode(array('success'=>false, 'message'=>'Permission denied.'));
+        mysqli_close($conn);
+        exit;
+    }
+
+    // HQ campaigns revert to 0 (re-acknowledgement required); outlet campaigns to 1
+    $revert_to = ($camp_type == '1') ? '0' : '1';
+
+    $q3 = "UPDATE vaccine_campaign SET `status`='$revert_to' WHERE id='$campaign_id'";
+    if(mysqli_query($conn, $q3)) {
+        echo json_encode(array('success'=>true));
+    } else {
+        echo json_encode(array('success'=>false, 'message'=>mysqli_error($conn)));
+    }
 } else {
     echo json_encode(array('success'=>false, 'message'=>'Unknown action.'));
 }
