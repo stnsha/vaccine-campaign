@@ -60,9 +60,7 @@ if($action == 'update_status') {
         exit;
     }
 
-    $can_revert = false;
-    if($camp_type == '1' && $vaccine_autho == '1') { $can_revert = true; }
-    if($camp_type == '2' && $user_has_access)      { $can_revert = true; }
+    $can_revert = ($vaccine_autho == '1');
 
     if(!$can_revert) {
         echo json_encode(array('success'=>false, 'message'=>'Permission denied.'));

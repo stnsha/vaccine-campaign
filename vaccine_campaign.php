@@ -49,12 +49,8 @@ if($camp_status != '2') {
 // Cancel: same as edit
 $can_cancel = ($can_edit && $days_until >= 0);
 
-// Revert: undo a cancellation; mirrors cancel permission
-$can_revert = false;
-if($camp_status == '2' && $days_until >= 0) {
-    if($camp_type == '1' && $vaccine_autho == '1') { $can_revert = true; }
-    if($camp_type == '2' && $user_has_access)      { $can_revert = true; }
-}
+// Revert: admin only
+$can_revert = ($camp_status == '2' && $days_until >= 0 && $vaccine_autho == '1');
 
 // Acknowledge: outlet staff, HQ campaigns only, status 0→1
 $can_acknowledge = ($camp_type == '1' && $user_has_access && $vaccine_autho != '1' && $camp_status == '0' && $days_until >= 0);
