@@ -89,7 +89,7 @@ if(isset($_POST['submit'])){
 			<tr>
 				<th align='right'><b>Email : </b></th>
 				<td>
-					<input type='email' name='email' size='30' autocomplete="off" onkeydown="return tabOnEnter(this,event)" maxlength='25' />
+					<input type='email' name='email' size='30' autocomplete="off" onkeydown="return tabOnEnter(this,event)" maxlength='255' />
 				</td>
 			</tr>
 			<tr>
