@@ -1,4 +1,106 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php ob_start(); ?>
+<!DOCTYPE html>
+<link rel="stylesheet" media="screen" type="text/css" href="../common/css/layout.css" />
+<style>
+.idx-panel {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
+    padding: 14px 18px;
+    margin: 6px 0 10px;
+}
+
+.myTable {
+    font-size: 13px;
+    width: 100%;
+}
+
+.myTable th {
+    font-size: 13px;
+    text-align: left !important;
+    padding: 6px 10px;
+    white-space: nowrap;
+    vertical-align: middle;
+    width: 160px;
+}
+
+.myTable td {
+    font-size: 13px;
+    text-align: left !important;
+    padding: 6px 10px;
+    vertical-align: middle;
+}
+
+.myTable input[type="text"],
+.myTable input[type="date"],
+.myTable input[type="time"],
+.myTable select,
+.myTable textarea {
+    border-radius: 8px;
+    padding: 5px 8px;
+    border: 1px solid #cfcfcf;
+    background: #fff;
+    font-size: 12px;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.4;
+    box-sizing: border-box;
+}
+
+.myTable input[type="text"]:focus,
+.myTable input[type="date"]:focus,
+.myTable input[type="time"]:focus,
+.myTable select:focus,
+.myTable textarea:focus {
+    outline: none;
+    border-color: rgba(0, 91, 150, .55);
+    box-shadow: 0 0 0 3px rgba(0, 91, 150, .12);
+}
+
+.upd-submit {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 20px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #005B96;
+    background: #005B96;
+    color: #fff;
+    font-size: 12px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .10);
+    box-sizing: border-box;
+}
+
+.upd-submit:hover {
+    background: #004d80;
+    border-color: #004d80;
+}
+.upd-back {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 20px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #d0d7de;
+    background: #e9ecef;
+    color: #111;
+    font-size: 12px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .10);
+    box-sizing: border-box;
+    text-decoration: none !important;
+    vertical-align: middle;
+}
+.upd-back:hover {
+    background: #d8dde3;
+    border-color: #b0b8c1;
+    text-decoration: none !important;
+}
+</style>
 <?php
 date_default_timezone_set('Asia/Kuala_Lumpur');
 require_once('../lock_adv.php');
@@ -9,27 +111,40 @@ if(isset($_POST['submit'])){
 	$v_time = trim(mysqli_real_escape_string($conn, $_POST['v_time']));
 	$trans_id = trim(mysqli_real_escape_string($conn, $_POST['trans_id']));
 	$outlet_id = trim(mysqli_real_escape_string($conn, $_POST['outlet_id']));
-	$campaign = trim(mysqli_real_escape_string($conn, $_POST['campaign']));
 	$item_code = trim(mysqli_real_escape_string($conn, $_POST['item_code']));
 	$cust_ic = trim(mysqli_real_escape_string($conn, $_POST['cust_ic']));
 	$customer_name = trim(mysqli_real_escape_string($conn, $_POST['customer_name']));
-	$clinic = trim(mysqli_real_escape_string($conn, $_POST['clinic']));
-	$clinic_part=explode(":",$clinic);
-	$clinic_id=trim($clinic_part[0]);
-	if((int)$clinic_id==0){echo "Please select clinic from dropdown list!"; exit;}
-	$phone2 = trim(mysqli_real_escape_string($conn, $_POST['phone2']));
-	$child_num = trim(mysqli_real_escape_string($conn, $_POST['child_num']));
+	$campaign_id = (int)trim(mysqli_real_escape_string($conn, $_POST['campaign_id']));
+	$clinic_id = 0;
+	if($campaign_id > 0){
+		$q_cl = "SELECT clinic FROM vaccine_campaign WHERE id='$campaign_id' LIMIT 1";
+		$r_cl = mysqli_query($conn, $q_cl);
+		$row_cl = $r_cl ? mysqli_fetch_assoc($r_cl) : null;
+		if($row_cl){ $clinic_id = (int)$row_cl['clinic']; }
+	}
+	$phone2        = trim(mysqli_real_escape_string($conn, $_POST['phone2']));
+	$child_num     = trim(mysqli_real_escape_string($conn, $_POST['child_num']));
+	$remark        = trim(mysqli_real_escape_string($conn, $_POST['remark']));
+	$cust_email    = trim(mysqli_real_escape_string($conn, $_POST['cust_email']));
+	$cust_addr     = trim(mysqli_real_escape_string($conn, $_POST['cust_addr']));
+	$cust_language = trim(mysqli_real_escape_string($conn, $_POST['cust_language']));
+	$cust_race     = trim(mysqli_real_escape_string($conn, $_POST['cust_race']));
+	$cust_nationality = trim(mysqli_real_escape_string($conn, $_POST['cust_nationality']));
+	$cust_diagnosis   = trim(mysqli_real_escape_string($conn, $_POST['cust_diagnosis']));
+	$cust_allergic    = trim(mysqli_real_escape_string($conn, $_POST['cust_allergic']));
+	if($cust_language === '' || $cust_race === '' || $cust_nationality === ''){
+		echo "Please fill in Language, Race, and Nationality before updating."; exit;
+	}
 	if(!empty($child_num)){$child_num= "@$child_num";} else {$child_num='';}
-	$remark = trim(mysqli_real_escape_string($conn, $_POST['remark']));
 	$phone2=preg_replace('/\D/', '', $phone2);
 	$phone2="$phone2$child_num";
 
 	//update customer details
-	$sql4="update `customer` set `phone`='$phone2' where `customer_name`='$customer_name' and `ic`='$cust_ic'";
+	$sql4="UPDATE customer SET customer_name='$customer_name', phone='$phone2', email='$cust_email', c_addr='$cust_addr', language='$cust_language', race='$cust_race', nationality='$cust_nationality', diagnosis='$cust_diagnosis', allergic='$cust_allergic' WHERE ic='$cust_ic' AND recycle=0";
 	$result4=mysqli_query($conn, $sql4);
 
 	//search customer ID
-	$sql3="select `id` from `customer` where `ic`='$cust_ic' and `customer_name`='$customer_name' and recycle=0";
+	$sql3="select `id` from `customer` where `ic`='$cust_ic' and recycle=0";
 	$result3 = mysqli_query($conn, $sql3);
 	$num3=mysqli_num_rows($result3);
 	$row3 = $result3 -> fetch_assoc();
@@ -44,7 +159,6 @@ if(isset($_POST['submit'])){
 	$num=mysqli_num_rows($result2);
 	$row2 = $result2 -> fetch_assoc();
 	@$trans_id2= stripslashes($row2["id"]);
-	$campaign_id = (int)trim(mysqli_real_escape_string($conn, $_POST['campaign_id']));
 	if(!$trans_id2){
 		$query="UPDATE `vaccine_trans` SET `v_date`='$v_date $v_time:00', `timestamp`=NOW(), `cust_id` = '$cust_id', `item_code` = '$item_code', `clinic`='$clinic_id', `outlet_id` = '$outlet_id', `remark` = '$remark', `operator` = '$id_user', `campaign_id` = '$campaign_id', `recycle` = '0' WHERE `vaccine_trans`.`id` = '$trans_id'";
 		$result=mysqli_query($conn, $query);
@@ -54,28 +168,45 @@ if(isset($_POST['submit'])){
 	}
 } else {
 $trans_id = trim(mysqli_real_escape_string($conn,$_GET['id']));
-$query="SELECT `v_date`, `cust_id`, `item_code`, `gp_clinics`.`name`, `gp_clinics`.`dr_name`, `gp_clinics`.`id` as `clinic_id`, `batch_num`, `expiry_date`, `remark`, `status`, `operator`, `v_date`, `outlet_id`, `gp_clinics`.`name`, `dr_name` FROM `vaccine_trans` left join gp_clinics on vaccine_trans.clinic=gp_clinics.id where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`id`='$trans_id' limit 0,1";
+$query="SELECT `vaccine_trans`.`campaign_id`, `v_date`, `cust_id`, `item_code`, `gp_clinics`.`name`, `gp_clinics`.`dr_name`, `gp_clinics`.`id` as `clinic_id`, `batch_num`, `expiry_date`, `remark`, `status`, `operator`, `v_date`, `outlet_id`, `gp_clinics`.`name`, `dr_name` FROM `vaccine_trans` left join gp_clinics on vaccine_trans.clinic=gp_clinics.id where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`id`='$trans_id' limit 0,1";
 $result=mysqli_query($conn, $query);
 $num = mysqli_num_rows ($result);
 $row = $result -> fetch_assoc();
 @$cust_id= stripslashes($row["cust_id"]);
 //search for customer name, IC, and phone
-	$query3="select `customer_name`, `ic`, `phone` from `customer` where `id`='$cust_id' limit 0,1";
+	$query3="SELECT customer_name, ic, phone, email, c_addr, language, race, nationality, diagnosis, allergic FROM customer WHERE id='$cust_id' LIMIT 0,1";
 	$result3 = mysqli_query($conn, $query3);
 	$row3 = $result3 -> fetch_assoc();
-	@$customer_name= stripslashes($row3["customer_name"]);
-	@$ic= stripslashes($row3["ic"]);
-	@$phone= stripslashes($row3["phone"]);
-	$phone_parts = explode("@",$phone);
+	@$customer_name   = stripslashes($row3["customer_name"]);
+	@$ic              = stripslashes($row3["ic"]);
+	@$phone           = stripslashes($row3["phone"]);
+	$phone_parts      = explode("@",$phone);
+	@$cust_email      = stripslashes($row3["email"]);
+	@$cust_addr       = stripslashes($row3["c_addr"]);
+	$cust_language    = (string)$row3["language"];
+	@$cust_race       = (string)$row3["race"];
+	@$cust_nationality= stripslashes($row3["nationality"]);
+	@$cust_diagnosis  = stripslashes($row3["diagnosis"]);
+	@$cust_allergic   = stripslashes($row3["allergic"]);
+	// Race dropdown
+	$race_options = '';
+	$r_races = mysqli_query($conn, "SELECT id, ethnic FROM mydna_ethnicities ORDER BY ethnic");
+	if($r_races){
+		while($rrow = mysqli_fetch_assoc($r_races)){
+			$rsel = ((string)$rrow['id'] === $cust_race) ? 'selected' : '';
+			$race_options .= "<option value='".htmlspecialchars($rrow['id'])."' $rsel>".htmlspecialchars($rrow['ethnic'])."</option>";
+		}
+	}
+	// Nationality helpers
+	$std_nats    = array('MALAYSIA','SINGAPORE','INDONESIA','BRUNEI','PHILIPPINES','THAILAND');
+	$is_std_nat  = ($cust_nationality === '' || in_array(strtoupper($cust_nationality), $std_nats));
+	$nat_sel_val = $is_std_nat ? strtoupper($cust_nationality) : 'OTHERS';
+	$nat_other_val = $is_std_nat ? '' : $cust_nationality;
 @$v_date= stripslashes($row["v_date"]);
 $v_time=substr($v_date,11,5);
 $v_date=substr($v_date, 0,10);
 @$outlet_id= stripslashes($row["outlet_id"]);
-// Find linked campaign
-$camp_q = "SELECT id FROM vaccine_campaign WHERE outlets='$outlet_id' AND v_date='$v_date' LIMIT 1";
-$camp_r = mysqli_query($conn, $camp_q);
-$camp_row = $camp_r ? mysqli_fetch_assoc($camp_r) : null;
-$linked_campaign_id = $camp_row ? $camp_row['id'] : '';
+$linked_campaign_id = (int)stripslashes($row["campaign_id"]);
 @$clinic_id= stripslashes($row["clinic_id"]);
 @$clinic= stripslashes($row["name"]);
 @$dr_name= stripslashes($row["dr_name"]);
@@ -108,82 +239,147 @@ $linked_campaign_id = $camp_row ? $camp_row['id'] : '';
 @$remark= stripslashes($row["remark"]);
 ?>
 <script type="text/javascript" src="../common/js/jquery-1.5.1.js"></script>
-<script type='text/javascript' src="../common/js/jquery.autocomplete.js"></script>
-<link rel="stylesheet" type="text/css" href="../common/css/jquery.autocomplete.css" />
 <script type="text/javascript">
-//autocomplete VIP dropdown list
-$().ready(function() {
-	$("#vip").autocomplete("vaccine_autoComplete2.php", {
-		width: 500,
-		matchContains: true,
-		selectFirst: false,
-		delay: 10
-	});
-	$("#vip").result(function(event, data, formatted) {
-
-	var vip = document.getElementById("vip").value;
-	var info = vip.split(':');
-	var strURL="vaccine_ajax.php?ic="+info[0]+"&name="+info[1];
-
-		var xmlhttp = getXMLHTTP();
-
-		if (xmlhttp) {
-			xmlhttp.onreadystatechange=function() {
-			if (xmlhttp.readyState==4 && xmlhttp.status==200)
-			{
-			var parts = xmlhttp.responseText.split('|');
-			document.getElementById("vipCard").innerHTML = parts[0];
-			document.getElementById("phone2").value = parts[1];
-			document.getElementById("cust_ic").value = parts[2];
-			document.getElementById("customer_name").value = parts[3];
-			document.getElementById("child_num").value = parts[4];
-			setFocusToTextBox("phone2");
+function lookupCustomer() {
+	var ic = document.getElementById('cust_ic').value.trim();
+	if(!ic){ return; }
+	document.getElementById('cust_msg').innerHTML = 'Searching...';
+	var xhr = getXMLHTTP();
+	xhr.onreadystatechange = function() {
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			try {
+				var r = JSON.parse(xhr.responseText);
+				if(r.found) {
+					var d = r.data;
+					document.getElementById('customer_name').value = d.customer_name || '';
+					document.getElementById('phone2').value        = d.phone_num || '';
+					document.getElementById('child_num').value     = d.child_num || '';
+					document.getElementById('cust_email').value    = d.email || '';
+					document.getElementById('cust_addr').value     = d.c_addr || '';
+					document.getElementById('cust_language').value = (d.language !== null && d.language !== undefined) ? d.language : '';
+					document.getElementById('cust_race').value     = d.race || '';
+					var stdNats = ['MALAYSIA','SINGAPORE','INDONESIA','BRUNEI','PHILIPPINES','THAILAND'];
+					var nat      = (d.nationality || '').toUpperCase();
+					var natSel   = document.getElementById('cust_nationality_sel');
+					var natOther = document.getElementById('nat_other');
+					var natHid   = document.getElementById('cust_nationality');
+					if(stdNats.indexOf(nat) !== -1){
+						natSel.value        = nat;
+						natOther.style.display = 'none';
+						natOther.value      = '';
+						natHid.value        = nat;
+					} else if(nat !== ''){
+						natSel.value        = 'OTHERS';
+						natOther.style.display = 'inline';
+						natOther.value      = d.nationality;
+						natHid.value        = d.nationality;
+					} else {
+						natSel.value        = '';
+						natOther.style.display = 'none';
+						natHid.value        = '';
+					}
+					document.getElementById('cust_diagnosis').value = d.diagnosis || '';
+					document.getElementById('cust_allergic').value  = d.allergic || '';
+					document.getElementById('cust_msg').innerHTML   = '<span style="color:green;">Found.</span>';
+				} else {
+					document.getElementById('cust_msg').innerHTML = '<span style="color:red;">Customer not found.</span>';
+				}
+			} catch(e) {
+				document.getElementById('cust_msg').innerHTML = '<span style="color:red;">Error loading customer.</span>';
 			}
-			}
-			xmlhttp.open("GET", strURL, true);
-			xmlhttp.send();
 		}
-	});
+	};
+	xhr.open('GET', 'vaccine_ajax_customer.php?ic=' + encodeURIComponent(ic), true);
+	xhr.send();
+}
 
-	$("#clinic").autocomplete("vaccine_autoComplete.php", {
-		width: 500,
-		matchContains: true,
-		selectFirst: false,
-		delay: 10
-	});
-	$("#clinic").result(function() {
-		checkCampDate();
-	});
-	checkCampDate();
-});
+function syncNationality() {
+	var sel    = document.getElementById('cust_nationality_sel');
+	var other  = document.getElementById('nat_other');
+	var hidden = document.getElementById('cust_nationality');
+	if(sel.value === 'OTHERS'){
+		other.style.display = 'inline';
+		hidden.value        = other.value.trim().toUpperCase();
+	} else {
+		other.style.display = 'none';
+		other.value         = '';
+		hidden.value        = sel.value;
+	}
+}
 
-function getXMLHTTP() { //fuction to return the xml http object
+function clearCustErrors() {
+	var ids = ['err_language','err_race','err_nationality'];
+	for(var i=0; i<ids.length; i++){
+		var el = document.getElementById(ids[i]);
+		if(el){ el.innerHTML = ''; }
+	}
+}
+
+function validateCustomerFields() {
+	clearCustErrors();
+	var lang     = document.getElementById('cust_language').value;
+	var race     = document.getElementById('cust_race').value;
+	var natSel   = document.getElementById('cust_nationality_sel');
+	var natOther = document.getElementById('nat_other');
+	var natHid   = document.getElementById('cust_nationality');
+	var valid    = true;
+	if(!lang){
+		document.getElementById('err_language').innerHTML = 'Please select Language.';
+		valid = false;
+	}
+	if(!race){
+		document.getElementById('err_race').innerHTML = 'Please select Race.';
+		valid = false;
+	}
+	if(natSel.value === 'OTHERS'){
+		if(!natOther.value.trim()){
+			document.getElementById('err_nationality').innerHTML = 'Please specify Nationality.';
+			valid = false;
+		} else {
+			natHid.value = natOther.value.trim().toUpperCase();
+		}
+	} else if(!natSel.value){
+		document.getElementById('err_nationality').innerHTML = 'Please select Nationality.';
+		valid = false;
+	} else {
+		natHid.value = natSel.value;
+	}
+	return valid;
+}
+
+function getXMLHTTP() {
 		var xmlhttp;
 		if (window.XMLHttpRequest)
-		{// code for IE7+, Firefox, Chrome, Opera, Safari
+		{
 		xmlhttp=new XMLHttpRequest();
 		}
 		else
-		{// code for IE6, IE5
+		{
 		xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
 		}
 
 		return xmlhttp;
 		}
 
-		function getClinic(outletId){
-			var strURL="vaccine_ajax.php?id="+outletId;
+		function loadCampaigns(outletId) {
+			var strURL = "vaccine_ajax.php?campaigns=" + encodeURIComponent(outletId) + "&selected=0";
 			var xmlhttp = getXMLHTTP();
 			if (xmlhttp) {
-			xmlhttp.onreadystatechange=function() {
-			if (xmlhttp.readyState==4 && xmlhttp.status==200)
-			{
-			var parts = xmlhttp.responseText.split('|');
-			document.getElementById("v_date").innerHTML = parts[0];
+				xmlhttp.onreadystatechange = function() {
+					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+						document.getElementById("camp_container").innerHTML = xmlhttp.responseText;
+					}
+				};
+				xmlhttp.open("GET", strURL, true);
+				xmlhttp.send();
 			}
-			}
-			xmlhttp.open("GET", strURL, true);
-			xmlhttp.send();
+		}
+
+		function onCampaignChange(sel) {
+			var opt = sel.options[sel.selectedIndex];
+			var date = opt.getAttribute('data-date');
+			if (date) {
+				document.getElementById('v_date').value = date;
 			}
 		}
 
@@ -237,82 +433,17 @@ function getXMLHTTP() { //fuction to return the xml http object
 		}
 	}
 
-	function checkCampDate() {
-		var dateEl   = document.getElementById("v_date");
-		var outletEl = document.getElementById("outlet_id");
-		var clinicEl = document.getElementById("clinic");
-		var span     = document.getElementById("camp_status");
-		var date     = dateEl   ? dateEl.value   : '';
-		var outlet   = outletEl ? outletEl.value  : '';
-		if (!date || !outlet) { span.innerHTML = ''; return; }
-		var clinicVal = clinicEl ? clinicEl.value : '';
-		var clinicId  = parseInt(clinicVal.split(':')[0].trim()) || 0;
-		var url = "vaccine_ajax_check_campaign.php?outlet_id=" + encodeURIComponent(outlet) + "&v_date=" + encodeURIComponent(date);
-		if (clinicId > 0) { url += "&clinic_id=" + clinicId; }
-		var xhr = new XMLHttpRequest();
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState == 4 && xhr.status == 200) {
-				try {
-					var r = JSON.parse(xhr.responseText);
-					if (r.found) {
-						document.getElementById("camp_id").value = r.id;
-						span.innerHTML = '<a href="vaccine_campaign.php?id=' + r.id + '" target="_blank" style="color:green;">Campaign found: ' + r.v_date + '</a>';
-					} else if (r.multiple) {
-						span.innerHTML = '<font color="orange">' + r.count + ' campaigns on this date. Select a clinic first.</font>';
-					} else {
-						document.getElementById("camp_id").value = '';
-						if (clinicId > 0) {
-							span.innerHTML = '<font color="red">No campaign found.</font> <a href="javascript:void(0)" onclick="createCampaign()" style="color:#e8a800;cursor:pointer;">Create?</a>';
-						} else {
-							span.innerHTML = '<font color="red">No campaign found. Select clinic first to create.</font>';
-						}
-					}
-				} catch(e) {}
-			}
-		};
-		xhr.open("GET", url, true);
-		xhr.send();
-	}
 
-	function createCampaign() {
-		var date      = document.getElementById("v_date").value;
-		var outlet    = document.getElementById("outlet_id").value;
-		var clinicVal = document.getElementById("clinic").value;
-		var clinicId  = clinicVal.split(':')[0].trim();
-		var span      = document.getElementById("camp_status");
-		if (!clinicId || parseInt(clinicId) == 0) {
-			span.innerHTML = '<font color="red">Please select a clinic first.</font>';
-			return;
-		}
-		span.innerHTML = 'Creating...';
-		var xhr = new XMLHttpRequest();
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState == 4 && xhr.status == 200) {
-				try {
-					var r = JSON.parse(xhr.responseText);
-					if (r.success) {
-						document.getElementById("camp_id").value = r.id;
-						span.innerHTML = '<a href="vaccine_campaign.php?id=' + r.id + '" target="_blank" style="color:green;">Campaign created</a>';
-					} else {
-						span.innerHTML = '<font color="red">' + r.error + '</font>';
-					}
-				} catch(e) { span.innerHTML = '<font color="red">Unexpected error.</font>'; }
-			}
-		};
-		xhr.open("POST", "vaccine_campaign_save.php", true);
-		xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xhr.send("outlet_id=" + encodeURIComponent(outlet) + "&v_date=" + encodeURIComponent(date) + "&clinic_id=" + encodeURIComponent(clinicId));
-	}
 </script>
 <div class="header"><b class="rtop"><b class="r1"></b><b class="r2"></b><b class="r3"></b><b class="r4"></b></b>
-             <h1 class="headerH1"><img src='../common/img/vaccine.png' height='18px'> Add New Transaction</h1>
+             <h1 class="headerH1"><img src='../common/img/vaccine.png' height='18px'> Edit Transaction</h1>
              <b class="rbottom"><b class="r4"></b><b class="r3"></b><b class="r2"></b><b class="r1"></b></b>
 </div>
-<fieldset>
-	<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="form1">
-		<table border="0" cellpadding="4" cellspacing="1" bgcolor="#EFEFEF" width="100%" class='myTable'>
+<div class="idx-panel">
+	<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="form1" onsubmit="return validateCustomerFields()">
+		<table width="100%" class='myTable'>
 			<tr>
-				<th style="text-align: right;">Outlet <span style="color: red;">*</span></th>
+				<th>Outlet <span style="color: red;">*</span></th>
 				<td colspan='3'>
 				<?php
 				$query4="SELECT outlet FROM  `staff` where id=$id_user";
@@ -336,7 +467,7 @@ function getXMLHTTP() { //fuction to return the xml http object
 				}
 				$e_outlet = explode(",", $outlet);
 
-					echo "<select id='outlet_id' name='outlet_id' onchange='getClinic(this.value); checkCampDate();' required>";
+					echo "<select id='outlet_id' name='outlet_id' onchange='loadCampaigns(this.value)' required>";
 					echo "<option value=''>Pick One</option>";
 					foreach ($e_outlet as $value) {
 					$query2="SELECT code FROM `outlet` where id='$value' limit 0,1";
@@ -351,32 +482,41 @@ function getXMLHTTP() { //fuction to return the xml http object
 				</td>
 			</tr>
 			<tr>
-				<th style="text-align: right;">Vaccination Date <span style="color: red;">*</span></th>
+				<th>Vaccination Date <span style="color: red;">*</span></th>
 				<td colspan='3'>
-					<input type='date' name='v_date' id='v_date' onkeydown="return tabOnEnter(this,event)" onchange="checkCampDate()" required value='<?php echo $v_date; ?>' />
+					<input type='date' name='v_date' id='v_date' onkeydown="return tabOnEnter(this,event)" required value='<?php echo $v_date; ?>' />
 					<input type='time' name='v_time' id='v_time' onkeydown="return tabOnEnter(this,event)" required value='<?php echo $v_time; ?>' />
 				</td>
 			</tr>
 			<tr>
-				<th style="text-align: right;">Campaign</th>
+				<th>Campaign</th>
 				<td colspan='3'>
-					<span id="camp_status"></span>
-					<input type="hidden" id="camp_id" name="campaign_id" value="<?php echo $linked_campaign_id; ?>" />
+					<span id="camp_container">
+					<?php
+					$q_camps = "SELECT vc.id, vc.v_date, gc.name, gc.dr_name FROM vaccine_campaign vc LEFT JOIN gp_clinics gc ON vc.clinic=gc.id WHERE vc.outlets='$outlet_id' AND (vc.status != '2' OR vc.id='$linked_campaign_id') AND (vc.v_date >= CURDATE() OR vc.id='$linked_campaign_id') ORDER BY vc.v_date ASC";
+					$r_camps = mysqli_query($conn, $q_camps);
+					echo "<select id='campaign_id' name='campaign_id' onchange='onCampaignChange(this)'>";
+					echo "<option value='' data-date=''>-- No Campaign --</option>";
+					if($r_camps){
+						while($c = mysqli_fetch_assoc($r_camps)){
+							$sel   = ($c['id'] == $linked_campaign_id) ? 'selected' : '';
+							$cname = $c['name'] ? $c['name'] : '';
+							$cdr   = $c['dr_name'] ? ' ('.$c['dr_name'].')' : '';
+							echo "<option value='".$c['id']."' data-date='".$c['v_date']."' $sel>".$c['v_date']." - $cname$cdr</option>";
+						}
+					}
+					echo "</select>";
+					?>
+					</span>
 				</td>
 			</tr>
+
 			<tr>
-				<th style="text-align: right;">Clinic <span style="color: red;">*</span></th>
-				<td colspan='3'>
-					<input id='clinic' name='clinic' placeholder='Clinic Name' size='50' autocomplete="off" value='<?php echo "$clinic_id: $clinic ($dr_name)"; ?>' required autofocus onkeydown="return tabOnEnter(this,event)" />
-				</td>
-			</tr>
-			<tr>
-				<th style="text-align: right;">Vaccine Type <span style="color: red;">*</span></th>
+				<th>Vaccine Type <span style="color: red;">*</span></th>
 				<td colspan='3'>
 					<select name='vaccine_type' onchange='getItemCode(this.value);' required>
 						<option value=''>Pick One</option>
 						<?php
-
 							$query5="SELECT `id`, `vaccine_name` from `vaccine_type` where recycle=0";
 							$result5 = mysqli_query($conn, $query5);
 							while ($row5 = $result5->fetch_assoc()) {
@@ -390,33 +530,110 @@ function getXMLHTTP() { //fuction to return the xml http object
 				</td>
 			</tr>
 			<tr>
-				<th style="text-align: right;">Item Code <span style="color: red;">*</span></th>
+				<th>Item Code <span style="color: red;">*</span></th>
 				<td colspan='3'><span id='item_code'><?php echo $dropdown_item; ?></span></td>
 			</tr>
 			<tr>
-				<th style="text-align: right;">Customer Name <span style="color: red;">*</span></th>
-				<td>
-					<input id='vip' name='vip' placeholder='IC,VIP ID,Name' size='50' autocomplete="off" value='<?php if($ic!=""){echo "$ic : $customer_name";} ?>'required autofocus onkeydown="return tabOnEnter(this,event)" />
-					<span id='vipCard'></span>
-					<input id='cust_ic' name='cust_ic' type='hidden' value='<?php echo $ic; ?>' />
-					<input id='customer_name' name='customer_name' type='hidden' value='<?php echo $customer_name; ?>' />
-				</td>
-				<th width='150px' style="text-align: right;">Customer's <br/>Contact <span style="color: red;">*</span></td>
-				<td width='30%'>
-					<input id='phone2' name='phone2' placeholder="Phone Num" size='15' autocomplete="off" onkeydown="return tabOnEnter(this,event)" required value='<?php echo $phone_parts[0]; ?>' />@
-					<select name='child_num' id='child_num'>
-						<option></option>
-						<?php
-						for ($x = 1; $x <= 10; $x++) {
-							if($phone_parts[1]==$x){$s='selected';} else {$s='';}
-							echo "<option $s>$x</option>";
-						}
-						?>
-					</select>
+				<th style="vertical-align:top;">Customer Details</th>
+				<td colspan='3'>
+					<input type='hidden' name='cust_ic' value='<?php echo htmlspecialchars($ic); ?>' />
+					<table style="border:none; background:none;">
+						<tr>
+							<td style="width:130px; font-weight:bold; padding:3px 6px;">IC</td>
+							<td style="padding:3px 6px;">
+								<input id='cust_ic' type='text' value='<?php echo htmlspecialchars($ic); ?>' disabled style="background:#f0f0f0;" />
+							</td>
+						</tr>
+						<tr>
+							<td style="font-weight:bold; padding:3px 6px;">Full Name</td>
+							<td style="padding:3px 6px;">
+								<input id='customer_name' name='customer_name' type='text' value='<?php echo htmlspecialchars($customer_name); ?>' style='width:300px;' />
+							</td>
+						</tr>
+						<tr>
+							<td style="font-weight:bold; padding:3px 6px;">Phone</td>
+							<td style="padding:3px 6px;">
+								<input id='phone2' name='phone2' type='text' placeholder='Phone number' value='<?php echo htmlspecialchars($phone_parts[0]); ?>' />@
+								<select name='child_num' id='child_num'>
+									<option></option>
+									<?php
+									for ($x = 1; $x <= 10; $x++) {
+										if(isset($phone_parts[1]) && $phone_parts[1]==$x){$s='selected';} else {$s='';}
+										echo "<option $s>$x</option>";
+									}
+									?>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td style="font-weight:bold; padding:3px 6px;">Email</td>
+							<td style="padding:3px 6px;">
+								<input id='cust_email' name='cust_email' type='email' value='<?php echo htmlspecialchars($cust_email); ?>' style='width:280px;' />
+							</td>
+						</tr>
+						<tr>
+							<td style="font-weight:bold; padding:3px 6px;">Address</td>
+							<td style="padding:3px 6px;">
+								<textarea id='cust_addr' name='cust_addr' rows='2' cols='45'><?php echo htmlspecialchars($cust_addr); ?></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td style="font-weight:bold; padding:3px 6px;">Language <span style="color:red;">*</span></td>
+							<td style="padding:3px 6px;">
+								<select id='cust_language' name='cust_language'>
+									<option value=''>Pick One</option>
+									<option value='0' <?php echo ($cust_language==='0')?'selected':''; ?>>BI</option>
+									<option value='1' <?php echo ($cust_language==='1')?'selected':''; ?>>BM</option>
+									<option value='2' <?php echo ($cust_language==='2')?'selected':''; ?>>BC</option>
+								</select>
+								<div id='err_language' style='color:red; font-size:11px;'></div>
+							</td>
+						</tr>
+						<tr>
+							<td style="font-weight:bold; padding:3px 6px;">Race <span style="color:red;">*</span></td>
+							<td style="padding:3px 6px;">
+								<select id='cust_race' name='cust_race'>
+									<option value=''>Pick One</option>
+									<?php echo $race_options; ?>
+								</select>
+								<div id='err_race' style='color:red; font-size:11px;'></div>
+							</td>
+						</tr>
+						<tr>
+							<td style="font-weight:bold; padding:3px 6px;">Nationality <span style="color:red;">*</span></td>
+							<td style="padding:3px 6px;">
+								<select id='cust_nationality_sel' onchange='syncNationality()'>
+									<option value=''>Pick One</option>
+									<option value='MALAYSIA' <?php echo ($nat_sel_val==='MALAYSIA')?'selected':''; ?>>MALAYSIA</option>
+									<option value='SINGAPORE' <?php echo ($nat_sel_val==='SINGAPORE')?'selected':''; ?>>SINGAPORE</option>
+									<option value='INDONESIA' <?php echo ($nat_sel_val==='INDONESIA')?'selected':''; ?>>INDONESIA</option>
+									<option value='BRUNEI' <?php echo ($nat_sel_val==='BRUNEI')?'selected':''; ?>>BRUNEI</option>
+									<option value='PHILIPPINES' <?php echo ($nat_sel_val==='PHILIPPINES')?'selected':''; ?>>PHILIPPINES</option>
+									<option value='THAILAND' <?php echo ($nat_sel_val==='THAILAND')?'selected':''; ?>>THAILAND</option>
+									<option value='OTHERS' <?php echo ($nat_sel_val==='OTHERS')?'selected':''; ?>>OTHERS</option>
+								</select>
+								<input id='nat_other' type='text' placeholder='Specify nationality' value='<?php echo htmlspecialchars($nat_other_val); ?>' oninput='syncNationality()' style='display:<?php echo ($nat_sel_val==="OTHERS")?"inline":"none"; ?>;' />
+								<input type='hidden' id='cust_nationality' name='cust_nationality' value='<?php echo htmlspecialchars($cust_nationality); ?>' />
+								<div id='err_nationality' style='color:red; font-size:11px;'></div>
+							</td>
+						</tr>
+						<tr>
+							<td style="font-weight:bold; padding:3px 6px;">Diagnosis</td>
+							<td style="padding:3px 6px;">
+								<textarea id='cust_diagnosis' name='cust_diagnosis' rows='3' cols='45'><?php echo htmlspecialchars($cust_diagnosis); ?></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td style="font-weight:bold; padding:3px 6px;">Allergic Status</td>
+							<td style="padding:3px 6px;">
+								<textarea id='cust_allergic' name='cust_allergic' rows='2' cols='45'><?php echo htmlspecialchars($cust_allergic); ?></textarea>
+							</td>
+						</tr>
+					</table>
 				</td>
 			</tr>
 			<tr>
-				<th style="text-align: right;">Remark(s)</th>
+				<th>Remark(s)</th>
 				<td colspan='3'>
 					<textarea name='remark' rows='3' cols='50'><?php echo $remark; ?></textarea>
 				</td>
@@ -424,13 +641,14 @@ function getXMLHTTP() { //fuction to return the xml http object
 			<tr>
 				<th></th>
 				<td colspan='3'>
-					<input type="submit" name="submit" value="Update" />
+					<input type="submit" name="submit" value="Update" class="upd-submit" />
+					<a href="vaccine_index.php" class="upd-back" style="margin-left:8px;">Back</a>
 					<input type='hidden' name='trans_id' value='<?php echo $trans_id; ?>' />
 				</td>
 			</tr>
-	</table>
+		</table>
 	</form>
-</fieldset>
+</div>
 <?php
 }
 $connect=0;

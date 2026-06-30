@@ -110,13 +110,30 @@ $status_color = array('0'=>'#FF6600','1'=>'#008800','2'=>'#0000CC','3'=>'#CC0000
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <style>
 .btn {
-    border: 2px solid black; background-color: white; color: black;
-    padding: 5px 8px; border-radius: 5px; font-size: 12px;
-    text-decoration: none; display: inline-block;
+    border: 2px solid black;
+    background-color: white;
+    color: black;
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    text-decoration: none;
+    display: inline-block;
 }
-.btn-blue  { border-color: #2196F3; color: dodgerblue; }
-.btn-green { border-color: #4CAF50; color: green; }
-.btn-red   { border-color: #f44336; color: red; }
+
+.btn-blue {
+    border-color: #2196F3;
+    color: dodgerblue;
+}
+
+.btn-green {
+    border-color: #4CAF50;
+    color: green;
+}
+
+.btn-red {
+    border-color: #f44336;
+    color: red;
+}
 </style>
 
 <div class="header" style="position: relative;">
@@ -127,7 +144,8 @@ $status_color = array('0'=>'#FF6600','1'=>'#008800','2'=>'#0000CC','3'=>'#CC0000
 <div align='left' style='margin-bottom:8px;'>
     <a href="vaccine_calendar.php">Back to Calendar</a>
     <?php if($can_edit) { ?>
-    &nbsp;|&nbsp; <a class="btn btn-blue" href="vaccine_update_campaign.php?id=<?php echo $campaign_id; ?>"><img src="../common/img/edit.png" width="14px"> Edit Campaign</a>
+    &nbsp;|&nbsp; <a class="btn btn-blue" href="vaccine_update_campaign.php?id=<?php echo $campaign_id; ?>"><img
+            src="../common/img/edit.png" width="14px"> Edit Campaign</a>
     <?php } ?>
 </div>
 
@@ -157,7 +175,8 @@ if(isset($_GET['updated']) && $_GET['updated'] == '1') {
         </tr>
         <tr>
             <td><b>Outlet:</b></td>
-            <td><?php echo $campaign['outlet_code'].($campaign['outlet_name'] ? ' - '.$campaign['outlet_name'] : ''); ?></td>
+            <td><?php echo $campaign['outlet_code'].($campaign['outlet_name'] ? ' - '.$campaign['outlet_name'] : ''); ?>
+            </td>
         </tr>
         <tr>
             <td><b>Clinic:</b></td>
@@ -179,10 +198,12 @@ if(isset($_GET['updated']) && $_GET['updated'] == '1') {
             <td><b>Campaign Type:</b></td>
             <td>
                 <?php if($camp_type == '1') { ?>
-                <span style="background:#3366FF; color:white; padding:2px 8px; border-radius:3px; font-size:11px; font-weight:bold;">HQ</span>
+                <span
+                    style="background:#3366FF; color:white; padding:2px 8px; border-radius:3px; font-size:11px; font-weight:bold;">HQ</span>
                 &nbsp;<b>HQ Initiated Campaign</b>
                 <?php } else { ?>
-                <span style="background:#FF6600; color:white; padding:2px 8px; border-radius:3px; font-size:11px; font-weight:bold;">Outlet</span>
+                <span
+                    style="background:#FF6600; color:white; padding:2px 8px; border-radius:3px; font-size:11px; font-weight:bold;">Outlet</span>
                 &nbsp;<b>Outlet Initiated Campaign</b>
                 <?php } ?>
             </td>
@@ -207,8 +228,10 @@ if(isset($_GET['updated']) && $_GET['updated'] == '1') {
                     } else {
                 ?>
                 <select id="status_select" style="padding:5px; width:320px;" onchange="updateStatus()">
-                    <option value="0" <?php echo $camp_status == '0' ? 'selected' : ''; ?>>Waiting for Outlet Acknowledgement</option>
-                    <option value="1" <?php echo $camp_status == '1' ? 'selected' : ''; ?>>Acknowledged - Recruiting Customers</option>
+                    <option value="0" <?php echo $camp_status == '0' ? 'selected' : ''; ?>>Waiting for Outlet
+                        Acknowledgement</option>
+                    <option value="1" <?php echo $camp_status == '1' ? 'selected' : ''; ?>>Acknowledged - Recruiting
+                        Customers</option>
                     <option value="2" style="color:#CC0000;">Cancel Campaign</option>
                 </select>
                 <span id="status_update_msg" style="color:#008800; margin-left:10px; display:none;">Updated</span>
@@ -226,7 +249,7 @@ if(isset($_GET['updated']) && $_GET['updated'] == '1') {
                     <option value="1">Acknowledge - Confirm Participation</option>
                 </select>
                 <span id="status_update_msg" style="color:#008800; margin-left:10px; display:none;">Updated</span>
-                <br/><small style="color:#999;">Only HQ can cancel HQ campaigns.</small>
+                <br /><small style="color:#999;">Only HQ can cancel HQ campaigns.</small>
                 <?php
                     } else {
                         // Already acknowledged - read only
@@ -273,7 +296,9 @@ if(isset($_GET['updated']) && $_GET['updated'] == '1') {
         </tr>
         <tr>
             <td></td>
-            <td><a href="vaccine_invoice.php?campaign_date=<?php echo urlencode($v_date); ?>&campaign_id=<?php echo $campaign_id; ?>" style="background:#2e6da4;color:#fff;padding:4px 12px;font-size:12px;border-radius:4px;text-decoration:none;">+ Add Transaction</a></td>
+            <td><a href="vaccine_invoice.php?campaign_date=<?php echo urlencode($v_date); ?>&campaign_id=<?php echo $campaign_id; ?>"
+                    style="background:#2e6da4;color:#fff;padding:4px 12px;font-size:12px;border-radius:4px;text-decoration:none;">+
+                    Add Transaction</a></td>
         </tr>
     </table>
 </fieldset>
@@ -284,12 +309,14 @@ function updateStatus() {
     var newStatus = select.value;
     var campaignId = '<?php echo $campaign_id; ?>';
 
-    if(newStatus == '2') {
-        if(!confirm('WARNING: Cancelling this campaign cannot be undone.\n\nAre you sure you want to cancel this campaign?')) {
+    if (newStatus == '2') {
+        if (!confirm(
+                'WARNING: Cancelling this campaign cannot be undone.\n\nAre you sure you want to cancel this campaign?'
+                )) {
             select.value = '<?php echo $camp_status; ?>';
             return;
         }
-    } else if(!confirm('Are you sure you want to change the campaign status?')) {
+    } else if (!confirm('Are you sure you want to change the campaign status?')) {
         select.value = '<?php echo $camp_status; ?>';
         return;
     }
@@ -303,12 +330,14 @@ function updateStatus() {
     xhr.open('POST', 'vaccine_ajax_update_campaign.php', true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
-        if(xhr.readyState == 4 && xhr.status == 200) {
+        if (xhr.readyState == 4 && xhr.status == 200) {
             var response = JSON.parse(xhr.responseText);
-            if(response.success) {
+            if (response.success) {
                 msg.innerHTML = 'Updated';
                 msg.style.color = '#008800';
-                setTimeout(function() { location.reload(); }, 800);
+                setTimeout(function() {
+                    location.reload();
+                }, 800);
             } else {
                 msg.innerHTML = 'Error: ' + response.message;
                 msg.style.color = '#AA0000';
@@ -320,14 +349,16 @@ function updateStatus() {
 }
 
 function cancelCampaign() {
-    if(!confirm('WARNING: Cancelling this campaign cannot be undone.\n\nAre you sure?')) { return; }
+    if (!confirm('WARNING: Cancelling this campaign cannot be undone.\n\nAre you sure?')) {
+        return;
+    }
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'vaccine_ajax_update_campaign.php', true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
-        if(xhr.readyState == 4 && xhr.status == 200) {
+        if (xhr.readyState == 4 && xhr.status == 200) {
             var response = JSON.parse(xhr.responseText);
-            if(response.success) {
+            if (response.success) {
                 location.reload();
             } else {
                 alert('Error: ' + response.message);
@@ -338,14 +369,16 @@ function cancelCampaign() {
 }
 
 function revertCampaign() {
-    if(!confirm('Are you sure you want to revert this cancellation and restore the campaign?')) { return; }
+    if (!confirm('Are you sure you want to revert this cancellation and restore the campaign?')) {
+        return;
+    }
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'vaccine_ajax_update_campaign.php', true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
-        if(xhr.readyState == 4 && xhr.status == 200) {
+        if (xhr.readyState == 4 && xhr.status == 200) {
             var response = JSON.parse(xhr.responseText);
-            if(response.success) {
+            if (response.success) {
                 location.reload();
             } else {
                 alert('Error: ' + response.message);
@@ -383,10 +416,12 @@ function updateTransStatus(newStatus, transId) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'vaccine_ajax.php?n=status&v=' + newStatus + '&t_id=' + transId, true);
     xhr.onreadystatechange = function() {
-        if(xhr.readyState == 4 && xhr.status == 200) {
+        if (xhr.readyState == 4 && xhr.status == 200) {
             msg.innerHTML = 'Saved';
             msg.style.color = '#008800';
-            setTimeout(function() { msg.style.display = 'none'; }, 1500);
+            setTimeout(function() {
+                msg.style.display = 'none';
+            }, 1500);
         }
     };
     xhr.send();
@@ -399,82 +434,95 @@ function updateTransStatus(newStatus, transId) {
     <p style="color:#999; text-align:center;">No transactions recorded for this campaign yet.</p>
     <?php } else { ?>
     <form id="print_form" method="post" action="vaccine_print_form.php" target="VaccinePrint">
-    <table border="0" cellpadding="4" cellspacing="1" bgcolor="#EFEFEF" width="100%" class='myTable' id='transTable'>
-        <tr>
-            <th width='3%'><input type="checkbox" id="chkAll" onclick="checkAll(this, 'table');" checked /></th>
-            <th width='3%'>No.</th>
-            <th width='18%'>Customer</th>
-            <th width='11%'>IC</th>
-            <th width='13%'>Vaccine</th>
-            <th width='9%'>Operator</th>
-            <th width='11%'>Status</th>
-            <th width='17%'>Remark</th>
-            <th width='7%'>Edit</th>
-        </tr>
-        <?php
+        <table border="0" cellpadding="4" cellspacing="1" bgcolor="#EFEFEF" width="100%" class='myTable'
+            id='transTable'>
+            <tr>
+                <th width='3%'><input type="checkbox" id="chkAll" onclick="checkAll(this, 'table');" checked /></th>
+                <th width='3%'>No.</th>
+                <th width='10%'>Inv No.</th>
+                <th width='13%'>Customer</th>
+                <th width='11%'>IC</th>
+                <th width='13%'>Vaccine</th>
+                <th width='9%'>Operator</th>
+                <th width='11%'>Status</th>
+                <th width='17%'>Remark</th>
+                <th width='7%'>Edit</th>
+            </tr>
+            <?php
         $n = 1;
         foreach($trans_rows as $tr) {
             $s_label = isset($status_label[$tr['status']]) ? $status_label[$tr['status']] : $tr['status'];
             $s_color = isset($status_color[$tr['status']]) ? $status_color[$tr['status']] : '#000';
         ?>
-        <tr>
-            <td align='center'><input type="checkbox" name="bulk_print[]" value="<?php echo $tr['id']; ?>" checked /></td>
-            <td align='center'><?php echo $n++; ?>.</td>
-            <td><?php echo $tr['customer_name']; ?></td>
-            <td align='center'><?php echo $tr['ic']; ?></td>
-            <td><?php echo $tr['item_code']; ?><?php if($tr['item_name']) echo '<br/><small>'.$tr['item_name'].'</small>'; ?></td>
-            <td align='center'><?php echo $tr['operator_name']; ?></td>
-            <td align='center'>
-                <?php if($user_has_access) { ?>
-                <select onchange="updateTransStatus(this.value, <?php echo $tr['id']; ?>)" style="font-size:11px;">
-                    <option value='0' <?php echo $tr['status']=='0' ? 'selected' : ''; ?>>Pending</option>
-                    <option value='1' <?php echo $tr['status']=='1' ? 'selected' : ''; ?>>Vaccinated</option>
-                    <option value='2' <?php echo $tr['status']=='2' ? 'selected' : ''; ?>>Referred to Doctor</option>
-                    <option value='3' <?php echo $tr['status']=='3' ? 'selected' : ''; ?>>Cancelled</option>
-                </select>
-                <span id='trans_msg_<?php echo $tr['id']; ?>' style='display:none; font-size:10px;'></span>
-                <?php } else { ?>
-                <b style="color:<?php echo $s_color; ?>"><?php echo $s_label; ?></b>
-                <?php } ?>
-            </td>
-            <td><?php echo $tr['remark']; ?></td>
-            <td align='center'>
-                <?php
+            <tr>
+                <td align='center'><input type="checkbox" name="bulk_print[]" value="<?php echo $tr['id']; ?>"
+                        checked /></td>
+                <td align='center'><?php echo $n++; ?>.</td>
+                <td align='center'><?php echo isset($tr['inv_num']) ? $tr['inv_num'] : ''; ?></td>
+                <td><?php echo $tr['customer_name']; ?></td>
+                <td align='center'><?php echo $tr['ic']; ?></td>
+                <td><?php echo $tr['item_code']; ?><?php if($tr['item_name']) echo '<br/><small>'.$tr['item_name'].'</small>'; ?>
+                </td>
+                <td align='center'><?php echo $tr['operator_name']; ?></td>
+                <td align='center'>
+                    <?php if($user_has_access) { ?>
+                    <select onchange="updateTransStatus(this.value, <?php echo $tr['id']; ?>)" style="font-size:11px;">
+                        <option value='0' <?php echo $tr['status']=='0' ? 'selected' : ''; ?>>Pending</option>
+                        <option value='1' <?php echo $tr['status']=='1' ? 'selected' : ''; ?>>Vaccinated</option>
+                        <option value='2' <?php echo $tr['status']=='2' ? 'selected' : ''; ?>>Referred to Doctor
+                        </option>
+                        <option value='3' <?php echo $tr['status']=='3' ? 'selected' : ''; ?>>Cancelled</option>
+                    </select>
+                    <span id='trans_msg_<?php echo $tr['id']; ?>' style='display:none; font-size:10px;'></span>
+                    <?php } else { ?>
+                    <b style="color:<?php echo $s_color; ?>"><?php echo $s_label; ?></b>
+                    <?php } ?>
+                </td>
+                <td><?php echo $tr['remark']; ?></td>
+                <td align='center'>
+                    <?php
                 $tr_phone_parts = explode('@', isset($tr['phone']) ? $tr['phone'] : '');
                 $tr_hp = preg_replace('/\D/', '', $tr_phone_parts[0]);
                 $tr_inv = isset($tr['inv_num']) ? $tr['inv_num'] : '';
                 ?>
-                <a href="vaccine_update.php?id=<?php echo $tr['id']; ?>" title="Edit"><img src='../common/img/edit.png' width='16px'></a><br>
-                <?php if($user_has_access) { ?>
-                <a href="vaccine_campaign.php?id=<?php echo $campaign_id; ?>&amp;d=1&amp;trans_id=<?php echo $tr['id']; ?>" title="Delete" onclick="return confirm('Are you sure you want to delete this transaction?');"><img src='../common/img/trash.png' width='16px'></a><br>
-                <?php } ?>
-                <a href="#" id="clinicBtn_<?php echo $tr['id']; ?>" title="Book Alpro Clinic Appointment"><img src='../common/img/clinic_logo.png' width='20px'></a>
-                <input type="hidden" id="inv_num_<?php echo $tr['id']; ?>" value="<?php echo htmlspecialchars($tr_inv); ?>">
-                <script>
-                document.getElementById("clinicBtn_<?php echo $tr['id']; ?>").addEventListener("click", function() {
-                    openClinicLink(
-                        <?php echo json_encode($tr['ic']); ?>,
-                        <?php echo json_encode($tr['customer_name']); ?>,
-                        <?php echo json_encode($tr_hp); ?>,
-                        document.getElementById("inv_num_<?php echo $tr['id']; ?>").value,
-                        <?php echo json_encode($payment_channel); ?>
-                    );
-                });
-                </script>
-            </td>
-        </tr>
-        <?php } ?>
-        <tr>
-            <td colspan='9' align='center' style='padding:8px;'>
-                <select name='print_type'>
-                    <option value='1'>Referral Letter</option>
-                </select>
-                <input type='hidden' name='staff' value='<?php echo $nama_staff; ?>' />
-                <input type='hidden' name='position' value='<?php echo $status_semasa; ?>' />
-                <input type='button' value='Generate' onclick='generatePrint();' style='padding:4px 14px;cursor:pointer;' />
-            </td>
-        </tr>
-    </table>
+                    <a href="vaccine_update.php?id=<?php echo $tr['id']; ?>" title="Edit"><img
+                            src='../common/img/edit.png' width='16px'></a><br>
+                    <?php if($user_has_access) { ?>
+                    <a href="vaccine_campaign.php?id=<?php echo $campaign_id; ?>&amp;d=1&amp;trans_id=<?php echo $tr['id']; ?>"
+                        title="Delete"
+                        onclick="return confirm('Are you sure you want to delete this transaction?');"><img
+                            src='../common/img/trash.png' width='16px'></a><br>
+                    <?php } ?>
+                    <a href="#" id="clinicBtn_<?php echo $tr['id']; ?>" title="Book Alpro Clinic Appointment"><img
+                            src='../common/img/clinic_logo.png' width='20px'></a>
+                    <input type="hidden" id="inv_num_<?php echo $tr['id']; ?>"
+                        value="<?php echo htmlspecialchars($tr_inv); ?>">
+                    <script>
+                    document.getElementById("clinicBtn_<?php echo $tr['id']; ?>").addEventListener("click", function() {
+                        openClinicLink(
+                            <?php echo json_encode($tr['ic']); ?>,
+                            <?php echo json_encode($tr['customer_name']); ?>,
+                            <?php echo json_encode($tr_hp); ?>,
+                            document.getElementById("inv_num_<?php echo $tr['id']; ?>").value,
+                            <?php echo json_encode($payment_channel); ?>
+                        );
+                    });
+                    </script>
+                </td>
+            </tr>
+            <?php } ?>
+            <tr>
+                <td colspan='10' align='center' style='padding:8px;'>
+                    <select name='print_type'>
+                        <option value='1'>Referral Letter</option>
+                    </select>
+                    <input type='hidden' name='staff' value='<?php echo $nama_staff; ?>' />
+                    <input type='hidden' name='position' value='<?php echo $status_semasa; ?>' />
+                    <input type='button' value='Generate' onclick='generatePrint();'
+                        style='padding:4px 14px;cursor:pointer;' />
+                </td>
+            </tr>
+        </table>
     </form>
     <?php } ?>
 </fieldset>
@@ -490,13 +538,13 @@ function openClinicLink(ic, name, phone, receiptNo, paymentChannel) {
         alert("Please complete the following before proceeding:\n- " + errors.join("\n- "));
         return;
     }
-    receiptNo      = receiptNo ? receiptNo.trim() : "";
+    receiptNo = receiptNo ? receiptNo.trim() : "";
     paymentChannel = paymentChannel ? paymentChannel.trim() : "";
-    var exp      = Math.floor(Date.now() / 30000);
+    var exp = Math.floor(Date.now() / 30000);
     var comments = "Referral Case from Octopus Module";
-    var payload  = name + "|" + ic + "|" + phone + "|" + receiptNo + "|" + paymentChannel + "|" + comments + "|" + exp;
+    var payload = name + "|" + ic + "|" + phone + "|" + receiptNo + "|" + paymentChannel + "|" + comments + "|" + exp;
     var secretKey = "octopus2nexus integration";
-    var token    = generateSHA256(payload + secretKey);
+    var token = generateSHA256(payload + secretKey);
     var headerData = {
         NRIC: ic,
         PatientName: name,
@@ -507,7 +555,7 @@ function openClinicLink(ic, name, phone, receiptNo, paymentChannel) {
         Exp: exp,
         Token: token
     };
-    var headerJson   = JSON.stringify(headerData);
+    var headerJson = JSON.stringify(headerData);
     var headerBase64 = btoa(unescape(encodeURIComponent(headerJson)));
     var url = "http://thenexushealth.com/OctopusBookPublicAppointment?header=" + encodeURIComponent(headerBase64);
     window.open(url, "_blank");

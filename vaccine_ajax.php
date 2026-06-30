@@ -64,6 +64,26 @@ echo "<img src='../common/img/tick.png' title='Ok'>|$phone_parts[0]|$ic|$custome
 } 
 }
 
+//return campaign dropdown for a given outlet (used by vaccine_update.php)
+if(isset($_GET['campaigns'])){
+	$camps_outlet = trim(mysqli_real_escape_string($conn, $_GET['campaigns']));
+	$camps_sel    = (int)(isset($_GET['selected']) ? $_GET['selected'] : 0);
+	$q = "SELECT vc.id, vc.v_date, gc.name, gc.dr_name FROM vaccine_campaign vc LEFT JOIN gp_clinics gc ON vc.clinic=gc.id WHERE vc.outlets='$camps_outlet' AND vc.status != '2' AND vc.v_date >= CURDATE() ORDER BY vc.v_date ASC";
+	$r = mysqli_query($conn, $q);
+	$html = "<select id='campaign_id' name='campaign_id' onchange='onCampaignChange(this)'>";
+	$html .= "<option value='' data-date=''>-- No Campaign --</option>";
+	if($r){
+		while($c = mysqli_fetch_assoc($r)){
+			$sel = ($c['id'] == $camps_sel) ? 'selected' : '';
+			$cname = $c['name'] ? $c['name'] : '';
+			$cdr   = $c['dr_name'] ? ' ('.$c['dr_name'].')' : '';
+			$html .= "<option value='".$c['id']."' data-date='".$c['v_date']."' $sel>".$c['v_date']." - $cname$cdr</option>";
+		}
+	}
+	$html .= "</select>";
+	echo $html;
+}
+
 //search for campaign and clinic
 $outlet_id=trim(mysqli_real_escape_string($conn,$_GET['id']));
 if($outlet_id){

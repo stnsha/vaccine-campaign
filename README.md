@@ -36,7 +36,7 @@ ALTER TABLE vaccine_trans
 
 ### 3. Create vaccine_trans (if not exists)
 
-All vaccine_ prefixed files write to `vaccine_trans`. Ensure this table exists and mirrors the structure of the original `vaccine_trans` table.
+All vaccine\_ prefixed files write to `vaccine_trans`. Ensure this table exists and mirrors the structure of the original `vaccine_trans` table.
 
 > **Note:** The `vaccine_campaign` table does **not** have a `recycle` column. Do not add `AND recycle=0` to any query against it.
 
@@ -71,38 +71,38 @@ Update the vaccine section in your ODB navigation menu:
 
 ## Key Files
 
-| File | Purpose |
-|---|---|
-| `vaccine_invoice.php` | New transaction entry — retrieves Xilnex invoice, generates pre-filled transaction forms |
-| `vaccine_index.php` | Transaction list with inline status/remark editing |
-| `vaccine_update.php` | Edit an existing transaction |
-| `vaccine_calendar.php` | Monthly campaign calendar — click date to add, click entry to view |
-| `vaccine_campaign.php` | Campaign detail: info, status management, transaction list |
-| `vaccine_add_campaign.php` | Add campaign form |
-| `vaccine_update_campaign.php` | Edit campaign (permission-gated by campaign type) |
-| `vaccine_import.php` | Bulk CSV import — auto-registers customers, resolves/creates campaigns per outlet+date |
-| `vaccine_index_clinic.php` | Clinic list |
-| `vaccine_add_clinic.php` / `vaccine_update_clinic.php` | Clinic CRUD |
-| `vaccine_deactivated_clinic.php` | Deactivated clinics |
-| `vaccine_index_item.php` | Vaccine item code management |
-| `vaccine_add_code.php` / `vaccine_update_code.php` | Item code CRUD |
-| `vaccine_export.php` / `vaccine_download.php` | Export clinic list to .xlsx |
-| `vaccine_print_option.php` / `vaccine_print_form.php` | Print-friendly vaccination form |
+| File                                                   | Purpose                                                                                  |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vaccine_invoice.php`                                  | New transaction entry — retrieves Xilnex invoice, generates pre-filled transaction forms |
+| `vaccine_index.php`                                    | Transaction list with inline status/remark editing                                       |
+| `vaccine_update.php`                                   | Edit an existing transaction                                                             |
+| `vaccine_calendar.php`                                 | Monthly campaign calendar — click date to add, click entry to view                       |
+| `vaccine_campaign.php`                                 | Campaign detail: info, status management, transaction list                               |
+| `vaccine_add_campaign.php`                             | Add campaign form                                                                        |
+| `vaccine_update_campaign.php`                          | Edit campaign (permission-gated by campaign type)                                        |
+| `vaccine_import.php`                                   | Bulk CSV import — auto-registers customers, resolves/creates campaigns per outlet+date   |
+| `vaccine_index_clinic.php`                             | Clinic list                                                                              |
+| `vaccine_add_clinic.php` / `vaccine_update_clinic.php` | Clinic CRUD                                                                              |
+| `vaccine_deactivated_clinic.php`                       | Deactivated clinics                                                                      |
+| `vaccine_index_item.php`                               | Vaccine item code management                                                             |
+| `vaccine_add_code.php` / `vaccine_update_code.php`     | Item code CRUD                                                                           |
+| `vaccine_export.php` / `vaccine_download.php`          | Export clinic list to .xlsx                                                              |
+| `vaccine_print_option.php` / `vaccine_print_form.php`  | Print-friendly vaccination form                                                          |
 
 ---
 
 ## Campaign Type / Status Logic
 
-| Who creates | `type` | Initial `status` |
-|---|---|---|
-| HQ (`vaccine_autho=1`) | `1` | `0` — Waiting for Outlet Acknowledgement |
-| Outlet staff | `2` | `1` — Auto-acknowledged |
+| Who creates            | `type` | Initial `status`                         |
+| ---------------------- | ------ | ---------------------------------------- |
+| HQ (`vaccine_autho=1`) | `1`    | `0` — Waiting for Outlet Acknowledgement |
+| Outlet staff           | `2`    | `1` — Auto-acknowledged                  |
 
-| Status value | Meaning |
-|---|---|
-| `0` | Waiting for Outlet Acknowledgement |
-| `1` | Acknowledged / Active |
-| `2` | Cancelled |
+| Status value | Meaning                            |
+| ------------ | ---------------------------------- |
+| `0`          | Waiting for Outlet Acknowledgement |
+| `1`          | Acknowledged / Active              |
+| `2`          | Cancelled                          |
 
 ---
 
@@ -122,7 +122,7 @@ vaccine_calendar.php
 
 ## Sensitive Files
 
-The following files contain API credentials and are excluded from this repository. Place them in the same directory as the other vaccine_ files:
+The following files contain API credentials and are excluded from this repository. Place them in the same directory as the other vaccine\_ files:
 
 - `vaccine_index.php` — Nexus Health integration signing key
 - `vaccine_invoice.php` — Xilnex API app ID and token
