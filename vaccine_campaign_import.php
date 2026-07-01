@@ -1,4 +1,3 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <?php
 require_once('../lock_adv.php');
 $connect = 1;
@@ -7,10 +6,9 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
 
 if (isset($_POST['submit'])) {
 
-    // Build outlet lookup: code => id
-    $query_outlet = "SELECT `id`, `code` FROM `outlet` WHERE recycle = 0";
+    $query_outlet  = "SELECT `id`, `code` FROM `outlet` WHERE recycle = 0";
     $result_outlet = mysqli_query($conn, $query_outlet);
-    $outlet_arr = array();
+    $outlet_arr    = array();
     while ($row_outlet = $result_outlet->fetch_assoc()) {
         $outlet_arr[stripslashes($row_outlet['code'])] = stripslashes($row_outlet['id']);
     }
@@ -20,7 +18,16 @@ if (isset($_POST['submit'])) {
     $ext      = strtolower(substr(strrchr($fileName, '.'), 1));
 
     if ($ext != 'xlsx') {
-        echo "<fieldset class='center'><img src='../common/img/warning.png'><br/>Unsupported file type!<br/><a href='vaccine_campaign_import.php'><img src='../common/img/refresh.png'> Back</a></fieldset>";
+?>
+<style type="text/css">
+.idx-panel{background:#fff;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.08);padding:18px 22px;margin:10px 0;font-size:13px !important;font-family:Arial,Helvetica,sans-serif !important;text-align:left !important;}
+a.upd-back,.upd-back{display:inline-flex !important;align-items:center !important;background:#e9ecef !important;color:#111 !important;border:1px solid #d0d7de !important;border-radius:8px !important;height:32px !important;padding:5px 18px !important;font-weight:bold !important;text-decoration:none !important;font-family:Arial,Helvetica,sans-serif !important;font-size:13px !important;box-sizing:border-box !important;line-height:1 !important;}
+</style>
+<div class="idx-panel">
+    <p style="color:#c53030 !important;font-size:13px !important;">Unsupported file type. Only .xlsx files are accepted.</p>
+    <a href="vaccine_campaign_import.php" class="upd-back">Go Back</a>
+</div>
+<?php
         $connect = 0;
         include('../common/index_adv.php');
         exit;
@@ -54,17 +61,15 @@ if (isset($_POST['submit'])) {
         $code = trim($rowData[0][1]);
 
         if (empty($date)) {
-            $errors[] = "Row $row: Missing date";
+            $errors[] = "Row $row: Missing date.";
             continue;
         }
-
         if (empty($code)) {
-            $errors[] = "Row $row: Missing outlet code";
+            $errors[] = "Row $row: Missing outlet code.";
             continue;
         }
-
         if (!isset($outlet_arr[$code])) {
-            $errors[] = "Row $row: Outlet code '<b>$code</b>' not found in system";
+            $errors[] = "Row $row: Outlet code '$code' not found in system.";
             continue;
         }
 
@@ -75,101 +80,269 @@ if (isset($_POST['submit'])) {
         }
 
         if ($date < $today) {
-            $errors[] = "Row $row: Cannot import past date '<b>$date</b>'. Only today or future dates are allowed.";
+            $errors[] = "Row $row: Cannot import past date '$date'. Only today or future dates are allowed.";
             continue;
         }
 
         $outlet_id = (int)$outlet_arr[$code];
         $date_esc  = $conn->real_escape_string($date);
 
-        // Skip if campaign already exists for this outlet + date
-        $chk = mysqli_query($conn, "SELECT id FROM vaccine_campaign WHERE v_date = '$date_esc' AND outlets = '$outlet_id' LIMIT 1");
+        $chk = mysqli_query($conn, "SELECT id FROM vaccine_campaign WHERE v_date='$date_esc' AND outlets='$outlet_id' LIMIT 1");
         if (mysqli_fetch_assoc($chk)) {
-            $errors[] = "Row $row: Campaign for outlet <b>$code</b> on <b>$date</b> already exists — skipped.";
+            $errors[] = "Row $row: Campaign for outlet $code on $date already exists — skipped.";
             continue;
         }
 
         $inserts[] = array('date' => $date_esc, 'outlet_id' => $outlet_id);
     }
 
-    echo "<fieldset>";
-
-    if (!empty($errors)) {
-        echo "<div style='color: red; margin-bottom: 15px;'>";
-        echo "<b>Errors Found:</b><br/>";
-        foreach ($errors as $error) {
-            echo "- $error<br/>";
+    $inserted = 0;
+    $failed   = 0;
+    foreach ($inserts as $row_data) {
+        $sql = "INSERT INTO vaccine_campaign (id, v_date, outlets, clinic, type, status) VALUES (NULL, '" . $row_data['date'] . "', '" . $row_data['outlet_id'] . "', '0', '1', '0')";
+        if (mysqli_query($conn, $sql)) {
+            $inserted++;
+        } else {
+            $failed++;
         }
-        echo "</div>";
     }
-
-    if (!empty($inserts)) {
-        $inserted = 0;
-        $failed   = 0;
-        foreach ($inserts as $row_data) {
-            $sql = "INSERT INTO vaccine_campaign (id, v_date, outlets, clinic, type, status) VALUES (NULL, '" . $row_data['date'] . "', '" . $row_data['outlet_id'] . "', '0', '1', '0')";
-            if (mysqli_query($conn, $sql)) {
-                $inserted++;
-            } else {
-                $failed++;
-            }
-        }
-        echo "<div style='color: green;'><b>Successfully inserted $inserted campaign(s).</b></div>";
-        if ($failed > 0) {
-            echo "<div style='color: red;'><b>$failed row(s) failed to insert.</b></div>";
-        }
-        echo "<div style='color: blue;'>Clinic is set to 0. Please update each campaign's clinic manually.</div><br/>";
-    } else {
-        echo "<div style='color: orange;'><b>No valid data found to insert.</b></div><br/>";
-    }
-
-    echo "<a href='vaccine_calendar.php'>Back to Calendar</a>";
-    echo "</fieldset>";
-
+?>
+<style type="text/css">
+.idx-panel {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    padding: 18px 22px;
+    margin: 10px 0;
+    font-size: 13px !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    text-align: left !important;
+}
+.idx-panel p, .idx-panel ul, .idx-panel li, .idx-panel div {
+    font-size: 13px !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    text-align: left !important;
+}
+.save-count {
+    font-size: 15px !important;
+    font-weight: bold !important;
+    color: #005B96 !important;
+    margin-bottom: 10px !important;
+}
+.save-errors {
+    background: #fff5f5 !important;
+    border-left: 3px solid #e53e3e !important;
+    border-radius: 6px !important;
+    padding: 10px 14px !important;
+    margin: 10px 0 !important;
+}
+.save-errors p { color: #c53030 !important; font-weight: bold !important; margin: 0 0 6px 0 !important; }
+.save-errors ul { margin: 0 !important; padding-left: 18px !important; }
+.save-errors li { color: #c53030 !important; margin-bottom: 3px !important; }
+.save-notice {
+    background: #fffbeb !important;
+    border-left: 3px solid #d97706 !important;
+    border-radius: 6px !important;
+    padding: 8px 14px !important;
+    margin: 8px 0 !important;
+    color: #92400e !important;
+}
+button.upd-submit, a.upd-submit, .upd-submit {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #005B96 !important;
+    color: #fff !important;
+    border: 1px solid #005B96 !important;
+    border-radius: 8px !important;
+    height: 32px !important;
+    padding: 5px 18px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    text-decoration: none !important;
+    line-height: 1 !important;
+}
+button.upd-submit:hover, a.upd-submit:hover, .upd-submit:hover { background: #004d80 !important; border-color: #004d80 !important; }
+a.upd-back, .upd-back {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #e9ecef !important;
+    color: #111 !important;
+    border: 1px solid #d0d7de !important;
+    border-radius: 8px !important;
+    height: 32px !important;
+    padding: 5px 18px !important;
+    font-weight: bold !important;
+    text-decoration: none !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
+}
+a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color: #b0b8c1 !important; }
+</style>
+<div class="idx-panel">
+    <div class="save-count"><?php echo $inserted; ?> campaign(s) imported successfully.</div>
+    <?php if ($failed > 0) { ?>
+    <div class="save-errors">
+        <p><?php echo $failed; ?> row(s) failed to insert.</p>
+    </div>
+    <?php } ?>
+    <?php if (!empty($errors)) { ?>
+    <div class="save-errors">
+        <p>Errors:</p>
+        <ul>
+            <?php foreach ($errors as $err) { echo "<li>" . htmlspecialchars($err) . "</li>"; } ?>
+        </ul>
+    </div>
+    <?php } ?>
+    <?php if (empty($inserts)) { ?>
+    <div class="save-notice">No valid data found to insert.</div>
+    <?php } else { ?>
+    <div class="save-notice">Clinic is set to 0. Please update each campaign's clinic manually.</div>
+    <?php } ?>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:16px;">
+        <a href="vaccine_campaign_import.php" class="upd-submit">Import Again</a>
+        <a href="vaccine_calendar.php" class="upd-back">Back to Calendar</a>
+    </div>
+</div>
+<?php
     $connect = 0;
     include('../common/index_adv.php');
 
 } else {
 ?>
-<div class="header" style="position: relative;">
-    <b class="rtop"><b class="r1"></b><b class="r2"></b><b class="r3"></b><b class="r4"></b></b>
-    <h1 class="headerH1"><img src='../common/img/target.png' width='20px'> Import Vaccine Campaign</h1>
-    <b class="rbottom"><b class="r4"></b><b class="r3"></b><b class="r2"></b><b class="r1"></b></b>
-</div>
-<fieldset>
+<style type="text/css">
+.idx-panel {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    padding: 14px 18px;
+    margin: 6px 0 10px;
+}
+.myTable {
+    width: 100% !important;
+    font-size: 13px !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    border-collapse: collapse !important;
+}
+.myTable th, .myTable td {
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    vertical-align: middle !important;
+}
+.myTable th {
+    width: 160px !important;
+    font-weight: bold !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    background: transparent !important;
+    color: inherit !important;
+}
+.myTable td { text-align: left !important; }
+.myTable input[type="file"] {
+    border-radius: 8px !important;
+    padding: 4px 8px !important;
+    border: 1px solid #cfcfcf !important;
+    font-size: 13px !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    box-sizing: border-box !important;
+    background: #fff !important;
+    width: 100% !important;
+    height: 34px !important;
+    cursor: pointer !important;
+}
+.myTable input[type="file"]:focus {
+    border-color: rgba(0,91,150,.55) !important;
+    box-shadow: 0 0 0 3px rgba(0,91,150,.12) !important;
+    outline: none !important;
+}
+.myTable input[type="file"]::file-selector-button {
+    background: #005B96 !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    margin-right: 10px !important;
+    height: 24px !important;
+}
+.myTable input[type="file"]::file-selector-button:hover {
+    background: #004d80 !important;
+}
+button.upd-submit, a.upd-submit, .upd-submit {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #005B96 !important;
+    color: #fff !important;
+    border: 1px solid #005B96 !important;
+    border-radius: 8px !important;
+    height: 32px !important;
+    padding: 5px 18px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    text-decoration: none !important;
+    line-height: 1 !important;
+}
+button.upd-submit:hover, a.upd-submit:hover, .upd-submit:hover { background: #004d80 !important; border-color: #004d80 !important; }
+a.upd-back, .upd-back {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #e9ecef !important;
+    color: #111 !important;
+    border: 1px solid #d0d7de !important;
+    border-radius: 8px !important;
+    height: 32px !important;
+    padding: 5px 18px !important;
+    font-weight: bold !important;
+    text-decoration: none !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
+}
+a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color: #b0b8c1 !important; }
+</style>
+<div class="idx-panel">
     <form method="post" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-        <table width="100%" border="0" cellspacing="2" cellpadding="0">
+        <table class="myTable">
             <tr>
+                <th>Excel File (.xlsx) <span style="color:red;">*</span></th>
                 <td>
-                    <div align="right"><b>Excel File (.xlsx):</b></div>
-                </td>
-                <td>
-                    <input name="userfile" type="file" required>
-                    <br/>
-                    <small style="color: #666;">Only campaigns for today or future dates can be imported. Past dates will be rejected.</small>
+                    <input name="userfile" type="file" required />
+                    <div style="color:#6b7280 !important;font-size:12px !important;margin-top:4px !important;">Only campaigns for today or future dates can be imported. Past dates will be rejected.</div>
                 </td>
             </tr>
             <tr>
-                <td></td>
+                <th>Template</th>
                 <td>
-                    <a href='vaccine_campaign_template.xlsx' title='Download Template'><img src='../common/img/download.png'> Download Template</a>
+                    <a href="vaccine_campaign_template.xlsx" class="upd-back" title="Download Template">
+                        <img src="../common/img/download.png" style="height:14px !important;width:auto !important;margin-right:4px !important;" /> Download Template
+                    </a>
                 </td>
             </tr>
             <tr>
-                <td></td>
+                <th></th>
                 <td>
-                    <small style="color: #888;">Clinic will be set to 0. Update each campaign's clinic manually after import.</small>
-                </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>
-                    <input name="submit" type="submit" class="box" id="submit" value="submit">
+                    <div style="color:#6b7280 !important;font-size:12px !important;margin-bottom:8px !important;">Clinic will be set to 0. Update each campaign's clinic manually after import.</div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <button type="submit" name="submit" id="submit" class="upd-submit">Import</button>
+                        <a href="vaccine_calendar.php" class="upd-back">Go to Calendar</a>
+                    </div>
                 </td>
             </tr>
         </table>
     </form>
-</fieldset>
+</div>
 <?php
     $connect = 0;
     include('../common/index_adv.php');
