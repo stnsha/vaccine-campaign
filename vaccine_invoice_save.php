@@ -1,4 +1,3 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <?php
 require_once('../lock_adv.php');
 $connect = 1;
@@ -87,27 +86,113 @@ foreach ($rows as $idx => $row) {
     }
 }
 ?>
-<div class="header" style="position:relative;">
-    <b class="rtop"><b class="r1"></b><b class="r2"></b><b class="r3"></b><b class="r4"></b></b>
-    <h1 class="headerH1"><img src='../common/img/vaccine.png' height='18px'> Save Result</h1>
-    <b class="rbottom"><b class="r4"></b><b class="r3"></b><b class="r2"></b><b class="r1"></b></b>
-</div>
-<fieldset>
-    <p><b><?php echo $added; ?></b> transaction(s) saved successfully.</p>
+<style type="text/css">
+.idx-panel {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    padding: 18px 22px;
+    margin: 10px 0;
+    font-size: 13px !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    text-align: left !important;
+}
+.idx-panel p, .idx-panel ul, .idx-panel li, .idx-panel div {
+    font-size: 13px !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    text-align: left !important;
+}
+.save-count {
+    font-size: 15px !important;
+    font-weight: bold;
+    color: #005B96;
+    margin-bottom: 10px;
+}
+.save-errors {
+    background: #fff5f5;
+    border-left: 3px solid #e53e3e;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 10px 0;
+}
+.save-errors p {
+    color: #c53030 !important;
+    font-weight: bold;
+    margin: 0 0 6px 0;
+    text-align: left !important;
+}
+.save-errors ul {
+    margin: 0;
+    padding-left: 18px;
+    text-align: left !important;
+}
+.save-errors li {
+    color: #c53030 !important;
+    margin-bottom: 3px;
+    text-align: left !important;
+}
+.save-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+button.upd-submit, .upd-submit {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #005B96 !important;
+    color: #fff !important;
+    border: 1px solid #005B96 !important;
+    border-radius: 8px !important;
+    height: 32px !important;
+    padding: 5px 18px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    text-decoration: none !important;
+    line-height: 1 !important;
+}
+button.upd-submit:hover, .upd-submit:hover { background: #004d80 !important; border-color: #004d80 !important; }
+a.upd-back, .upd-back {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #e9ecef !important;
+    color: #111 !important;
+    border: 1px solid #d0d7de !important;
+    border-radius: 8px !important;
+    height: 32px !important;
+    padding: 5px 18px !important;
+    font-weight: bold !important;
+    text-decoration: none !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
+}
+a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color: #b0b8c1 !important; }
+</style>
+<div class="idx-panel">
+    <div class="save-count">
+        <?php echo $added; ?> transaction(s) saved successfully.
+    </div>
     <?php if (!empty($errors)) { ?>
-    <p style="color:red;"><b>Errors:</b></p>
-    <ul>
-        <?php foreach ($errors as $e) { echo "<li>" . htmlspecialchars($e) . "</li>"; } ?>
-    </ul>
+    <div class="save-errors">
+        <p>Errors:</p>
+        <ul>
+            <?php foreach ($errors as $e) { echo "<li>" . htmlspecialchars($e) . "</li>"; } ?>
+        </ul>
+    </div>
     <?php } ?>
-    <p>
-        <a href="vaccine_invoice.php">Enter New Invoice</a> &nbsp;|&nbsp;
-        <a href="vaccine_index.php">View Transactions</a>
+    <div class="save-actions">
+        <a href="vaccine_invoice.php" class="upd-submit">Enter New Invoice</a>
+        <a href="vaccine_index.php" class="upd-back">View Transactions</a>
         <?php if ($campaign_id > 0) { ?>
-        &nbsp;|&nbsp; <a href="vaccine_campaign.php?id=<?php echo $campaign_id; ?>">Go to Campaign</a>
+        <a href="vaccine_campaign.php?id=<?php echo $campaign_id; ?>" class="upd-back">Go to Campaign</a>
         <?php } ?>
-    </p>
-</fieldset>
+    </div>
+</div>
 <?php
 $connect = 0;
 include('../common/index_adv.php');
