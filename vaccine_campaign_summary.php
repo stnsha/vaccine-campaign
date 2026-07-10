@@ -58,10 +58,10 @@ $offset       = ($page - 1) * $per_page;
 $query = "SELECT vc.id, vc.v_date, vc.type, vc.status,
                  o.code AS outlet_code, o.comp_name AS outlet_name,
                  cl.name AS clinic_name, cl.dr_name,
-                 (SELECT COUNT(*) FROM vaccine_trans_local
-                   WHERE campaign_id = vc.id AND recycle = 0) AS total_booked,
-                 (SELECT COUNT(*) FROM vaccine_trans_local
-                   WHERE campaign_id = vc.id AND recycle = 0 AND status = '1') AS total_vaccinated
+                 (SELECT COUNT(*) FROM vaccine_trans
+                   WHERE outlet_id = vc.outlets AND DATE(v_date) = vc.v_date AND recycle = 0) AS total_booked,
+                 (SELECT COUNT(*) FROM vaccine_trans
+                   WHERE outlet_id = vc.outlets AND DATE(v_date) = vc.v_date AND recycle = 0 AND status = '1') AS total_vaccinated
           FROM vaccine_campaign vc
           LEFT JOIN outlet o ON vc.outlets = o.id
           LEFT JOIN gp_clinics cl ON vc.clinic = cl.id
