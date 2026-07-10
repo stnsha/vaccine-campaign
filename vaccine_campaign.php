@@ -168,6 +168,7 @@ $campaign_id = trim(mysqli_real_escape_string($conn, $_REQUEST['id']));
 $query  = "SELECT vc.id, vc.v_date, vc.outlets AS outlet_id, vc.type, vc.status,
            vc.clinic AS clinic_id,
            o.code AS outlet_code, o.company AS outlet_name,
+           o.office1 AS outlet_office1, o.office2 AS outlet_office2,
            vcl.name, vcl.dr_name, vcl.phone_1, vcl.address
            FROM vaccine_campaign vc
            LEFT JOIN outlet o ON vc.outlets = o.id
@@ -212,6 +213,24 @@ if ($camp_status != '2') {
 $can_cancel  = ($can_edit && $days_until >= 0);
 $can_revert  = ($camp_status == '2' && $days_until >= 0 && $vaccine_autho == '1');
 $can_acknowledge = ($camp_type == '1' && $user_has_access && $vaccine_autho != '1' && $camp_status == '0' && $days_until >= 0);
+
+// Build WhatsApp reminder links to the outlet (Send Reminder feature)
+$reminder_date = date('d F Y', strtotime($v_date));
+$reminder_message = "Hi team, would like to confirm the arrangements for the *{$reminder_date} Vaccination Event*:\n\n"
+    . "- Kindly *acknowledge* the vaccination event in the Octopus calendar.\n"
+    . "- Update the *GP Clinic* in the calendar.\n\n"
+    . "📌 Once updated, kindly send me a *screenshot* of the Octopus calendar as proof of completion.\n\n"
+    . "Terima Kasih. Xie Xie Ni.";
+$reminder_message_encoded = rawurlencode($reminder_message);
+
+$reminder_links = array();
+$reminder_candidates = array($campaign['outlet_office1'], $campaign['outlet_office2']);
+foreach ($reminder_candidates as $raw_phone) {
+    $contact = preg_replace('/\D/', '', $raw_phone);
+    if ($contact !== '' && substr($contact, 0, 2) == '01') {
+        $reminder_links[] = array('display' => $raw_phone, 'number' => '6' . $contact);
+    }
+}
 
 if (isset($_GET['d']) && isset($_GET['trans_id']) && $user_has_access) {
     $del_trans_id = trim(mysqli_real_escape_string($conn, $_GET['trans_id']));
@@ -353,6 +372,19 @@ $status_color = array('0' => '#FF6600', '1' => '#008800', '2' => '#0000CC', '3' 
                         echo '<option value="2" style="color:#CC0000;">Cancel Campaign</option>';
                         echo '</select>';
                         echo '<span id="status_update_msg" style="color:#008800 !important;margin-left:10px !important;display:none !important;font-size:13px !important;font-family:Arial,Helvetica,sans-serif !important;">Updated</span>';
+
+                        if ($camp_status == '0') {
+                            if (count($reminder_links) > 0) {
+                                echo '<div style="margin-top:8px;">';
+                                foreach ($reminder_links as $link) {
+                                    echo '<a href="https://api.whatsapp.com/send?phone=' . $link['number'] . '&text=' . $reminder_message_encoded . '&language=en" target="_blank" class="upd-success" style="margin-right:8px;">'
+                                       . '<img src="../common/img/wa.png" width="15px" style="margin-right:4px;"> Send Reminder (' . htmlspecialchars($link['display']) . ')</a>';
+                                }
+                                echo '</div>';
+                            } else {
+                                echo '<br/><small style="color:#6b7280 !important;font-size:12px !important;">No WhatsApp-capable outlet number on file — cannot send reminder.</small>';
+                            }
+                        }
                     }
                 } elseif ($camp_type == '1' && $user_has_access) {
                     if ($days_until < 0) {
