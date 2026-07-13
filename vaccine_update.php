@@ -107,31 +107,31 @@ require_once('../lock_adv.php');
 $connect=1;
 include ('../common/index_adv.php');
 if(isset($_POST['submit'])){
-	$v_date = trim(mysqli_real_escape_string($conn, $_POST['v_date']));
-	$v_time = trim(mysqli_real_escape_string($conn, $_POST['v_time']));
-	$trans_id = trim(mysqli_real_escape_string($conn, $_POST['trans_id']));
-	$outlet_id = trim(mysqli_real_escape_string($conn, $_POST['outlet_id']));
-	$item_code = trim(mysqli_real_escape_string($conn, $_POST['item_code']));
-	$cust_ic = trim(mysqli_real_escape_string($conn, $_POST['cust_ic']));
-	$customer_name = trim(mysqli_real_escape_string($conn, $_POST['customer_name']));
-	$campaign_id = (int)trim(mysqli_real_escape_string($conn, $_POST['campaign_id']));
+	$v_date = trim(mysqli_real_escape_string($conn, $_POST['v_date'] ?? ''));
+	$v_time = trim(mysqli_real_escape_string($conn, $_POST['v_time'] ?? ''));
+	$trans_id = trim(mysqli_real_escape_string($conn, $_POST['trans_id'] ?? ''));
+	$outlet_id = trim(mysqli_real_escape_string($conn, $_POST['outlet_id'] ?? ''));
+	$item_code = trim(mysqli_real_escape_string($conn, $_POST['item_code'] ?? ''));
+	$cust_ic = trim(mysqli_real_escape_string($conn, $_POST['cust_ic'] ?? ''));
+	$customer_name = trim(mysqli_real_escape_string($conn, $_POST['customer_name'] ?? ''));
+	$campaign_id = (int)trim(mysqli_real_escape_string($conn, $_POST['campaign_id'] ?? ''));
 	$clinic_id = 0;
 	if($campaign_id > 0){
 		$q_cl = "SELECT clinic FROM vaccine_campaign WHERE id='$campaign_id' LIMIT 1";
 		$r_cl = mysqli_query($conn, $q_cl);
 		$row_cl = $r_cl ? mysqli_fetch_assoc($r_cl) : null;
-		if($row_cl){ $clinic_id = (int)$row_cl['clinic']; }
+		if($row_cl){ $clinic_id = (int)($row_cl['clinic'] ?? 0); }
 	}
-	$phone2        = trim(mysqli_real_escape_string($conn, $_POST['phone2']));
-	$child_num     = trim(mysqli_real_escape_string($conn, $_POST['child_num']));
-	$remark        = trim(mysqli_real_escape_string($conn, $_POST['remark']));
-	$cust_email    = trim(mysqli_real_escape_string($conn, $_POST['cust_email']));
-	$cust_addr     = trim(mysqli_real_escape_string($conn, $_POST['cust_addr']));
-	$cust_language = trim(mysqli_real_escape_string($conn, $_POST['cust_language']));
-	$cust_race     = trim(mysqli_real_escape_string($conn, $_POST['cust_race']));
-	$cust_nationality = trim(mysqli_real_escape_string($conn, $_POST['cust_nationality']));
-	$cust_diagnosis   = trim(mysqli_real_escape_string($conn, $_POST['cust_diagnosis']));
-	$cust_allergic    = trim(mysqli_real_escape_string($conn, $_POST['cust_allergic']));
+	$phone2        = trim(mysqli_real_escape_string($conn, $_POST['phone2'] ?? ''));
+	$child_num     = trim(mysqli_real_escape_string($conn, $_POST['child_num'] ?? ''));
+	$remark        = trim(mysqli_real_escape_string($conn, $_POST['remark'] ?? ''));
+	$cust_email    = trim(mysqli_real_escape_string($conn, $_POST['cust_email'] ?? ''));
+	$cust_addr     = trim(mysqli_real_escape_string($conn, $_POST['cust_addr'] ?? ''));
+	$cust_language = trim(mysqli_real_escape_string($conn, $_POST['cust_language'] ?? ''));
+	$cust_race     = trim(mysqli_real_escape_string($conn, $_POST['cust_race'] ?? ''));
+	$cust_nationality = trim(mysqli_real_escape_string($conn, $_POST['cust_nationality'] ?? ''));
+	$cust_diagnosis   = trim(mysqli_real_escape_string($conn, $_POST['cust_diagnosis'] ?? ''));
+	$cust_allergic    = trim(mysqli_real_escape_string($conn, $_POST['cust_allergic'] ?? ''));
 	if($cust_language === '' || $cust_race === '' || $cust_nationality === ''){
 		echo "Please fill in Language, Race, and Nationality before updating."; exit;
 	}
@@ -146,9 +146,9 @@ if(isset($_POST['submit'])){
 	//search customer ID
 	$sql3="select `id` from `customer` where `ic`='$cust_ic' and recycle=0";
 	$result3 = mysqli_query($conn, $sql3);
-	$num3=mysqli_num_rows($result3);
-	$row3 = $result3 -> fetch_assoc();
-	@$cust_id= stripslashes($row3["id"]);
+	$num3= $result3 ? mysqli_num_rows($result3) : 0;
+	$row3 = $result3 ? $result3 -> fetch_assoc() : null;
+	$cust_id= $row3 ? stripslashes($row3['id'] ?? '') : '';
 	if(!$cust_id){
 		echo "Invalid customer data found!<br>Please refill again customer info.<br><a href='vaccine_update.php?id=$trans_id'>Back</a>"; exit;
 	}
@@ -156,9 +156,9 @@ if(isset($_POST['submit'])){
 	//prevent duplication
 	$sql2="select id from `vaccine_trans` where `outlet_id`='$outlet_id' and `v_date`='$v_date' and `cust_id`='$cust_id' and `item_code`='$item_code' and `id`!='$trans_id' and recycle=0";
 	$result2 = mysqli_query($conn, $sql2);
-	$num=mysqli_num_rows($result2);
-	$row2 = $result2 -> fetch_assoc();
-	@$trans_id2= stripslashes($row2["id"]);
+	$num= $result2 ? mysqli_num_rows($result2) : 0;
+	$row2 = $result2 ? $result2 -> fetch_assoc() : null;
+	$trans_id2= $row2 ? stripslashes($row2['id'] ?? '') : '';
 	if(!$trans_id2){
 		$query="UPDATE `vaccine_trans` SET `v_date`='$v_date $v_time:00', `timestamp`=NOW(), `cust_id` = '$cust_id', `item_code` = '$item_code', `clinic`='$clinic_id', `outlet_id` = '$outlet_id', `remark` = '$remark', `operator` = '$id_user', `campaign_id` = '$campaign_id', `recycle` = '0' WHERE `vaccine_trans`.`id` = '$trans_id'";
 		$result=mysqli_query($conn, $query);
@@ -167,27 +167,27 @@ if(isset($_POST['submit'])){
 		echo "Duplicated transaction found!";
 	}
 } else {
-$trans_id = trim(mysqli_real_escape_string($conn,$_GET['id']));
+$trans_id = trim(mysqli_real_escape_string($conn,$_GET['id'] ?? ''));
 $query="SELECT `vaccine_trans`.`campaign_id`, `v_date`, `cust_id`, `item_code`, `gp_clinics`.`name`, `gp_clinics`.`dr_name`, `gp_clinics`.`id` as `clinic_id`, `batch_num`, `expiry_date`, `remark`, `status`, `operator`, `v_date`, `outlet_id`, `gp_clinics`.`name`, `dr_name` FROM `vaccine_trans` left join gp_clinics on vaccine_trans.clinic=gp_clinics.id where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`id`='$trans_id' limit 0,1";
 $result=mysqli_query($conn, $query);
-$num = mysqli_num_rows ($result);
-$row = $result -> fetch_assoc();
-@$cust_id= stripslashes($row["cust_id"]);
+$num = $result ? mysqli_num_rows ($result) : 0;
+$row = $result ? $result -> fetch_assoc() : null;
+$cust_id= $row ? stripslashes($row['cust_id'] ?? '') : '';
 //search for customer name, IC, and phone
 	$query3="SELECT customer_name, ic, phone, email, c_addr, language, race, nationality, diagnosis, allergic FROM customer WHERE id='$cust_id' LIMIT 0,1";
 	$result3 = mysqli_query($conn, $query3);
-	$row3 = $result3 -> fetch_assoc();
-	@$customer_name   = stripslashes($row3["customer_name"]);
-	@$ic              = stripslashes($row3["ic"]);
-	@$phone           = stripslashes($row3["phone"]);
+	$row3 = $result3 ? $result3 -> fetch_assoc() : null;
+	$customer_name   = $row3 ? stripslashes($row3['customer_name'] ?? '') : '';
+	$ic              = $row3 ? stripslashes($row3['ic'] ?? '') : '';
+	$phone           = $row3 ? stripslashes($row3['phone'] ?? '') : '';
 	$phone_parts      = explode("@",$phone);
-	@$cust_email      = stripslashes($row3["email"]);
-	@$cust_addr       = stripslashes($row3["c_addr"]);
-	$cust_language    = (string)$row3["language"];
-	@$cust_race       = (string)$row3["race"];
-	@$cust_nationality= stripslashes($row3["nationality"]);
-	@$cust_diagnosis  = stripslashes($row3["diagnosis"]);
-	@$cust_allergic   = stripslashes($row3["allergic"]);
+	$cust_email      = $row3 ? stripslashes($row3['email'] ?? '') : '';
+	$cust_addr       = $row3 ? stripslashes($row3['c_addr'] ?? '') : '';
+	$cust_language    = $row3 ? (string)($row3['language'] ?? '') : '';
+	$cust_race       = $row3 ? (string)($row3['race'] ?? '') : '';
+	$cust_nationality= $row3 ? stripslashes($row3['nationality'] ?? '') : '';
+	$cust_diagnosis  = $row3 ? stripslashes($row3['diagnosis'] ?? '') : '';
+	$cust_allergic   = $row3 ? stripslashes($row3['allergic'] ?? '') : '';
 	// Race dropdown
 	$race_options = '';
 	$r_races = mysqli_query($conn, "SELECT id, ethnic FROM mydna_ethnicities ORDER BY ethnic");
@@ -202,41 +202,41 @@ $row = $result -> fetch_assoc();
 	$is_std_nat  = ($cust_nationality === '' || in_array(strtoupper($cust_nationality), $std_nats));
 	$nat_sel_val = $is_std_nat ? strtoupper($cust_nationality) : 'OTHERS';
 	$nat_other_val = $is_std_nat ? '' : $cust_nationality;
-@$v_date= stripslashes($row["v_date"]);
+$v_date= $row ? stripslashes($row['v_date'] ?? '') : '';
 $v_time=substr($v_date,11,5);
 $v_date=substr($v_date, 0,10);
-@$outlet_id= stripslashes($row["outlet_id"]);
-$linked_campaign_id = (int)stripslashes($row["campaign_id"]);
-@$clinic_id= stripslashes($row["clinic_id"]);
-@$clinic= stripslashes($row["name"]);
-@$dr_name= stripslashes($row["dr_name"]);
-@$selected_item_code= stripslashes($row["item_code"]);
+$outlet_id= $row ? stripslashes($row['outlet_id'] ?? '') : '';
+$linked_campaign_id = $row ? (int)stripslashes($row['campaign_id'] ?? '') : 0;
+$clinic_id= $row ? stripslashes($row['clinic_id'] ?? '') : '';
+$clinic= $row ? stripslashes($row['name'] ?? '') : '';
+$dr_name= $row ? stripslashes($row['dr_name'] ?? '') : '';
+$selected_item_code= $row ? stripslashes($row['item_code'] ?? '') : '';
 //search for vaccine type by selected item code
 	$query6="SELECT `vaccine_type` from `vaccine_code` where `item_code`='$selected_item_code'";
 	$result6 = mysqli_query($conn, $query6);
-	$row6 = $result6 -> fetch_assoc();
-	@$vaccine_type= stripslashes($row6["vaccine_type"]);
+	$row6 = $result6 ? $result6 -> fetch_assoc() : null;
+	$vaccine_type= $row6 ? stripslashes($row6['vaccine_type'] ?? '') : '';
 //form item drop down
 	$query2="select `item_code` from `vaccine_code` where `vaccine_type`='$vaccine_type'";
 	$result2 = mysqli_query($conn, $query2);
-	$num2=mysqli_num_rows($result2);
-	$dropdown_item.="<select name='item_code' required onchange='setFocusToTextBox(\"vip\")'><option value=''>Pick One</option>";
+	$num2= $result2 ? mysqli_num_rows($result2) : 0;
+	$dropdown_item = "<select name='item_code' required onchange='setFocusToTextBox(\"vip\")'><option value=''>Pick One</option>";
 	if($num2>0){
 		while ($row2 = $result2->fetch_assoc()) {
-			$item_code = stripslashes($row2['item_code']);
+			$item_code = stripslashes($row2['item_code'] ?? '');
 				// search for item code description
 				$query3="SELECT `name` from `simple` where `item_code`='$item_code' limit 0,1";
 				$result3 = mysqli_query($conn, $query3);
-				$num3=mysqli_num_rows($result3);
-				$row3 = $result3 -> fetch_assoc();
-				@$description= stripslashes($row3["name"]);
+				$num3= $result3 ? mysqli_num_rows($result3) : 0;
+				$row3 = $result3 ? $result3 -> fetch_assoc() : null;
+				$description= $row3 ? stripslashes($row3['name'] ?? '') : '';
 				if($selected_item_code==$item_code){$s='selected';} else {$s='';}
 			$dropdown_item.="<option value='$item_code' $s>$item_code: $description</option>";
 		}
 	}
 	$dropdown_item.="</select>";
 
-@$remark= stripslashes($row["remark"]);
+$remark= $row ? stripslashes($row['remark'] ?? '') : '';
 ?>
 <script type="text/javascript" src="../common/js/jquery-1.5.1.js"></script>
 <script type="text/javascript">
@@ -448,19 +448,19 @@ function getXMLHTTP() {
 				<?php
 				$query4="SELECT outlet FROM  `staff` where id=$id_user";
 				$result4 = mysqli_query($conn,$query4);
-				$row4 = $result4 -> fetch_assoc();
-				@$outlet = stripslashes($row4['outlet']);
+				$row4 = $result4 ? $result4 -> fetch_assoc() : null;
+				$outlet = $row4 ? stripslashes($row4['outlet'] ?? '') : '';
 
 				if($vaccine_autho=='1'){
 				$query3="select `id`, `code` from outlet where recycle='0' and `code` NOT LIKE 'NEC%' AND `code` NOT LIKE 'NHQ%' AND `code` NOT LIKE '%0' AND `code` NOT LIKE '%C' AND `code` NOT LIKE '%HQ' AND `code` NOT LIKE 'NSDW%' order by `code`";
 				$result3=mysqli_query($conn,$query3);
-				$num3 = mysqli_num_rows ($result3);
+				$num3 = $result3 ? mysqli_num_rows ($result3) : 0;
 
 				if ($num3 > 0 ) {
 				$i3=0;
 				$outlet='';
 				while ($row3 = $result3->fetch_assoc()) {
-				$id = stripslashes($row3['id']);
+				$id = stripslashes($row3['id'] ?? '');
 				if($i3=='0'){
 				$outlet.="$id";} else {$outlet.=",$id";}
 				++$i3; } }
@@ -472,8 +472,8 @@ function getXMLHTTP() {
 					foreach ($e_outlet as $value) {
 					$query2="SELECT code FROM `outlet` where id='$value' limit 0,1";
 					$result2=mysqli_query($conn,$query2);
-					$row2 = $result2 -> fetch_assoc();
-					@$code = stripslashes($row2['code']);
+					$row2 = $result2 ? $result2 -> fetch_assoc() : null;
+					$code = $row2 ? stripslashes($row2['code'] ?? '') : '';
 					if($value==$outlet_id){$s='selected';} else {$s='';}
 					echo "<option value='$value' $s>$code</option>";
 					}
@@ -519,11 +519,13 @@ function getXMLHTTP() {
 						<?php
 							$query5="SELECT `id`, `vaccine_name` from `vaccine_type` where recycle=0";
 							$result5 = mysqli_query($conn, $query5);
-							while ($row5 = $result5->fetch_assoc()) {
-								$type_id = stripslashes($row5['id']);
-								$vaccine_name = stripslashes($row5['vaccine_name']);
-								if($type_id==$vaccine_type){$s='selected';} else {$s='';}
-								echo "<option value='$type_id' $s>$vaccine_name</option>";
+							if ($result5) {
+								while ($row5 = $result5->fetch_assoc()) {
+									$type_id = stripslashes($row5['id'] ?? '');
+									$vaccine_name = stripslashes($row5['vaccine_name'] ?? '');
+									if($type_id==$vaccine_type){$s='selected';} else {$s='';}
+									echo "<option value='$type_id' $s>$vaccine_name</option>";
+								}
 							}
 						?>
 					</select>

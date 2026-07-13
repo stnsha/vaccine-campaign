@@ -11,9 +11,9 @@ function json_err($msg) {
     exit;
 }
 
-$outlet_id = trim(mysqli_real_escape_string($conn, $_POST['outlet_id']));
-$v_date    = trim(mysqli_real_escape_string($conn, $_POST['v_date']));
-$clinic_id = (int)$_POST['clinic_id'];
+$outlet_id = trim(mysqli_real_escape_string($conn, $_POST['outlet_id'] ?? ''));
+$v_date    = trim(mysqli_real_escape_string($conn, $_POST['v_date'] ?? ''));
+$clinic_id = (int)($_POST['clinic_id'] ?? 0);
 
 if (!$outlet_id || !$v_date || $clinic_id == 0) {
     json_err('Missing required fields.');
@@ -21,7 +21,7 @@ if (!$outlet_id || !$v_date || $clinic_id == 0) {
 
 // Check if campaign already exists
 $chk = mysqli_query($conn, "SELECT id FROM vaccine_campaign WHERE outlets='$outlet_id' AND v_date='$v_date' LIMIT 1");
-if (mysqli_num_rows($chk) > 0) {
+if ($chk && mysqli_num_rows($chk) > 0) {
     $row = mysqli_fetch_assoc($chk);
     echo json_encode(array('success' => true, 'id' => $row['id']));
     mysqli_close($conn); exit;

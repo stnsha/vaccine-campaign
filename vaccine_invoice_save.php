@@ -15,16 +15,16 @@ $added       = 0;
 $errors      = array();
 
 foreach ($rows as $idx => $row) {
-    $outlet_id     = trim(mysqli_real_escape_string($conn, $row['outlet_id']));
-    $inv_num       = trim(mysqli_real_escape_string($conn, $row['inv_num']));
-    $v_date        = trim(mysqli_real_escape_string($conn, $row['v_date']));
-    $item_code     = trim(mysqli_real_escape_string($conn, $row['item_code']));
-    $cust_ic       = trim(mysqli_real_escape_string($conn, $row['cust_ic']));
-    $customer_name = trim(mysqli_real_escape_string($conn, $row['customer_name']));
-    $phone2        = trim(mysqli_real_escape_string($conn, $row['phone2']));
-    $child_num     = trim(mysqli_real_escape_string($conn, $row['child_num']));
-    $remark        = trim(mysqli_real_escape_string($conn, $row['remark']));
-    $clinic        = trim(mysqli_real_escape_string($conn, $row['clinic']));
+    $outlet_id     = trim(mysqli_real_escape_string($conn, $row['outlet_id'] ?? ''));
+    $inv_num       = trim(mysqli_real_escape_string($conn, $row['inv_num'] ?? ''));
+    $v_date        = trim(mysqli_real_escape_string($conn, $row['v_date'] ?? ''));
+    $item_code     = trim(mysqli_real_escape_string($conn, $row['item_code'] ?? ''));
+    $cust_ic       = trim(mysqli_real_escape_string($conn, $row['cust_ic'] ?? ''));
+    $customer_name = trim(mysqli_real_escape_string($conn, $row['customer_name'] ?? ''));
+    $phone2        = trim(mysqli_real_escape_string($conn, $row['phone2'] ?? ''));
+    $child_num     = trim(mysqli_real_escape_string($conn, $row['child_num'] ?? ''));
+    $remark        = trim(mysqli_real_escape_string($conn, $row['remark'] ?? ''));
+    $clinic        = trim(mysqli_real_escape_string($conn, $row['clinic'] ?? ''));
     $clinic_parts  = explode(":", $clinic);
     $clinic_id     = trim($clinic_parts[0]);
 
@@ -49,8 +49,8 @@ foreach ($rows as $idx => $row) {
     // Get customer ID
     $sql3 = "SELECT id FROM customer WHERE ic='$cust_ic' AND recycle=0 LIMIT 1";
     $result3 = mysqli_query($conn, $sql3);
-    $row3 = $result3->fetch_assoc();
-    $cust_id = $row3 ? (int)$row3['id'] : 0;
+    $row3 = $result3 ? $result3->fetch_assoc() : null;
+    $cust_id = $row3 ? (int)($row3['id'] ?? 0) : 0;
 
     if (!$cust_id || $cust_id == 0) {
         $errors[] = "Row $idx: Customer not found in system.";
@@ -60,7 +60,7 @@ foreach ($rows as $idx => $row) {
     // Check duplicate
     $sql2 = "SELECT id FROM vaccine_trans WHERE outlet_id='$outlet_id' AND v_date='$v_date' AND cust_id='$cust_id' AND item_code='$item_code' AND recycle=0";
     $result2 = mysqli_query($conn, $sql2);
-    if (mysqli_num_rows($result2) > 0) {
+    if ($result2 && mysqli_num_rows($result2) > 0) {
         $errors[] = "Row $idx: Duplicate transaction for customer $customer_name.";
         continue;
     }
@@ -70,7 +70,7 @@ foreach ($rows as $idx => $row) {
     $camp_r   = mysqli_query($conn, $camp_chk);
     $camp_row = $camp_r ? mysqli_fetch_assoc($camp_r) : null;
     if ($camp_row) {
-        $campaign_id = (int)$camp_row['id'];
+        $campaign_id = (int)($camp_row['id'] ?? 0);
     } else {
         $camp_ins = "INSERT INTO vaccine_campaign (id, v_date, outlets, clinic, type, status) VALUES (NULL, '$v_date', '$outlet_id', '$clinic_id', '2', '1')";
         mysqli_query($conn, $camp_ins);

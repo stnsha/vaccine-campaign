@@ -16,8 +16,8 @@ if (isset($_POST['submit'])) {
 
     $query8  = "SELECT count(item_code) as count from simple where item_code='$item_code' limit 0,1";
     $result8 = mysqli_query($conn, $query8);
-    $row8    = $result8->fetch_assoc();
-    @$count  = stripslashes($row8['count']);
+    $row8    = $result8 ? $result8->fetch_assoc() : null;
+    $count   = $row8 ? (int)($row8['count'] ?? 0) : 0;
     if ($count == 0) { ?>
 <style type="text/css">
 .idx-panel { background:#fff;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.08);padding:18px 22px;margin:10px 0;font-size:13px !important;font-family:Arial,Helvetica,sans-serif !important;text-align:left !important; }
@@ -50,9 +50,9 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
 
     $query3   = "SELECT count(id) as count_id from `vaccine_code` where `item_code` = '$item_code' and `id`!='$vaccine_id' limit 0,1";
     $result3  = mysqli_query($conn, $query3);
-    $row3     = $result3->fetch_assoc();
-    @$count_id = stripslashes($row3['count_id']);
-    if ($count_id == '0') {
+    $row3     = $result3 ? $result3->fetch_assoc() : null;
+    $count_id = $row3 ? (int)($row3['count_id'] ?? 0) : 0;
+    if ($count_id === 0) {
         $query   = "UPDATE `vaccine_code` SET `vaccine_type` = '$vaccine_type', `item_code` = '$item_code' WHERE `vaccine_code`.`id` = '$vaccine_id'";
         $results = mysqli_query($conn, $query);
         if ($results) {
@@ -73,17 +73,17 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
     exit;
     }
 } else {
-    $vaccine_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
+    $vaccine_id = trim(mysqli_real_escape_string($conn, $_GET['id'] ?? ''));
     $query3     = "SELECT * FROM `vaccine_code` WHERE `id`='$vaccine_id' limit 0,1";
     $result3    = mysqli_query($conn, $query3);
-    $row3       = $result3->fetch_assoc();
-    @$vaccine_type = stripslashes($row3["vaccine_type"]);
-    @$item_code    = stripslashes($row3["item_code"]);
+    $row3       = $result3 ? $result3->fetch_assoc() : null;
+    $vaccine_type = $row3 ? stripslashes($row3['vaccine_type'] ?? '') : '';
+    $item_code    = $row3 ? stripslashes($row3['item_code'] ?? '') : '';
 
     $query4      = "SELECT `name` FROM `simple` WHERE `item_code`='$item_code' limit 0,1";
     $result4     = mysqli_query($conn, $query4);
-    $row4        = $result4->fetch_assoc();
-    @$description = stripslashes($row4["name"]);
+    $row4        = $result4 ? $result4->fetch_assoc() : null;
+    $description = $row4 ? stripslashes($row4['name'] ?? '') : '';
 ?>
 <style type="text/css">
 .idx-panel {
@@ -215,9 +215,11 @@ function tabOnEnter(field, evt) {
                     $result4 = mysqli_query($conn, $query4);
                     echo "<select name='vaccine_type' required style='min-width:200px;'>";
                     echo "<option value=''>Pick One</option>";
-                    while ($nt = mysqli_fetch_array($result4)) {
-                        $s = ($nt['id'] == $vaccine_type) ? 'selected' : '';
-                        echo "<option value='$nt[id]' $s>$nt[vaccine_name]</option>";
+                    if ($result4) {
+                        while ($nt = mysqli_fetch_array($result4)) {
+                            $s = ($nt['id'] == $vaccine_type) ? 'selected' : '';
+                            echo "<option value='$nt[id]' $s>$nt[vaccine_name]</option>";
+                        }
                     }
                     echo "</select>";
                     ?>

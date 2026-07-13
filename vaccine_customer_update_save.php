@@ -11,16 +11,16 @@ function json_err($msg) {
     exit;
 }
 
-$ic            = trim(mysqli_real_escape_string($conn, $_POST['ic']));
-$customer_name = trim(mysqli_real_escape_string($conn, $_POST['name']));
+$ic            = trim(mysqli_real_escape_string($conn, $_POST['ic'] ?? ''));
+$customer_name = trim(mysqli_real_escape_string($conn, $_POST['name'] ?? ''));
 $customer_name = ucwords(strtolower($customer_name));
-$phone         = preg_replace('/\D/', '', trim(mysqli_real_escape_string($conn, $_POST['phone'])));
-$child_num     = trim(mysqli_real_escape_string($conn, $_POST['child_num']));
-$language      = trim(mysqli_real_escape_string($conn, $_POST['language']));
-$race          = trim(mysqli_real_escape_string($conn, $_POST['race']));
-$nationality   = strtoupper(trim(mysqli_real_escape_string($conn, $_POST['nationality'])));
-$email         = trim(mysqli_real_escape_string($conn, $_POST['email']));
-$c_addr        = trim(mysqli_real_escape_string($conn, $_POST['addr']));
+$phone         = preg_replace('/\D/', '', trim(mysqli_real_escape_string($conn, $_POST['phone'] ?? '')));
+$child_num     = trim(mysqli_real_escape_string($conn, $_POST['child_num'] ?? ''));
+$language      = trim(mysqli_real_escape_string($conn, $_POST['language'] ?? ''));
+$race          = trim(mysqli_real_escape_string($conn, $_POST['race'] ?? ''));
+$nationality   = strtoupper(trim(mysqli_real_escape_string($conn, $_POST['nationality'] ?? '')));
+$email         = trim(mysqli_real_escape_string($conn, $_POST['email'] ?? ''));
+$c_addr        = trim(mysqli_real_escape_string($conn, $_POST['addr'] ?? ''));
 
 if (!empty($child_num)) { $phone = $phone . "@$child_num"; }
 
@@ -29,7 +29,7 @@ if (!$ic || !$customer_name || !$race || !$nationality) {
 }
 
 $chk = mysqli_query($conn, "SELECT id FROM customer WHERE ic='$ic' AND recycle=0 LIMIT 1");
-if (mysqli_num_rows($chk) == 0) { json_err('Customer not found.'); }
+if (!$chk || mysqli_num_rows($chk) == 0) { json_err('Customer not found.'); }
 
 $query  = "UPDATE customer SET customer_name='$customer_name', phone='$phone', language='$language', race='$race', nationality='$nationality', email='$email', c_addr='$c_addr' WHERE ic='$ic' AND recycle=0";
 $result = mysqli_query($conn, $query);

@@ -15,8 +15,8 @@ if (isset($_POST['submit'])) {
 
     $query8  = "SELECT count(item_code) as count from simple where item_code='$item_code' limit 0,1";
     $result8 = mysqli_query($conn, $query8);
-    $row8    = $result8->fetch_assoc();
-    @$count  = stripslashes($row8['count']);
+    $row8    = $result8 ? $result8->fetch_assoc() : null;
+    $count   = $row8 ? (int)($row8['count'] ?? 0) : 0;
     if ($count == 0) { ?>
 <style type="text/css">
 .idx-panel{background:#fff;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.08);padding:18px 22px;margin:10px 0;font-size:13px !important;font-family:Arial,Helvetica,sans-serif !important;text-align:left !important;}
@@ -49,9 +49,9 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
 
     $query3   = "SELECT count(id) as count_id from `vaccine_code` where `item_code` = '$item_code' limit 0,1";
     $result3  = mysqli_query($conn, $query3);
-    $row3     = $result3->fetch_assoc();
-    @$count_id = stripslashes($row3['count_id']);
-    if ($count_id == '0') {
+    $row3     = $result3 ? $result3->fetch_assoc() : null;
+    $count_id = $row3 ? (int)($row3['count_id'] ?? 0) : 0;
+    if ($count_id === 0) {
         $query   = "INSERT INTO `vaccine_code` (`id`, `vaccine_type`, `item_code`, `operator`) VALUES (NULL, '$vaccine_type', '$item_code', '1')";
         $results = mysqli_query($conn, $query);
         $vaccine_id = mysqli_insert_id($conn);
@@ -204,8 +204,10 @@ function tabOnEnter(field, evt) {
                     $result4 = mysqli_query($conn, $query4);
                     echo "<select name='vaccine_type' required style='min-width:200px;'>";
                     echo "<option value=''>Pick One</option>";
-                    while ($nt = mysqli_fetch_array($result4)) {
-                        echo "<option value='$nt[id]'>$nt[vaccine_name]</option>";
+                    if ($result4) {
+                        while ($nt = mysqli_fetch_array($result4)) {
+                            echo "<option value='$nt[id]'>$nt[vaccine_name]</option>";
+                        }
                     }
                     echo "</select>";
                     ?>

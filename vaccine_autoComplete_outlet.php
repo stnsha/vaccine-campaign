@@ -5,7 +5,7 @@ $connect=1;
 include('../common/index_adv.php');
 ob_end_clean();
 
-$q = trim(mysqli_real_escape_string($conn, $_GET['q']));
+$q = trim(mysqli_real_escape_string($conn, $_GET['q'] ?? ''));
 if(!$q) exit;
 
 $outlet_filter = ($vaccine_autho != '1' && $outlet) ? "AND id IN ($outlet)" : '';
@@ -17,7 +17,9 @@ $sql = "SELECT id, code FROM outlet WHERE recycle='0'
         $outlet_filter
         ORDER BY code";
 $rsd = mysqli_query($conn, $sql);
-while($rs = mysqli_fetch_array($rsd)) {
-    echo $rs['id'] . " : " . $rs['code'] . "\n";
+if ($rsd) {
+    while($rs = mysqli_fetch_array($rsd)) {
+        echo $rs['id'] . " : " . $rs['code'] . "\n";
+    }
 }
 ?>

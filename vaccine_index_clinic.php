@@ -189,26 +189,26 @@ $can_edit = (strpos(strtolower($status_semasa), 'pharmacist') !== false
 $query3  = "SELECT clinic, MAX(v_date) AS latest_date FROM vaccine_trans GROUP BY clinic";
 $result3 = mysqli_query($conn, $query3);
 $clinic_arr = array();
-if (mysqli_num_rows($result3) > 0) {
+if ($result3 && mysqli_num_rows($result3) > 0) {
     while ($row3 = $result3->fetch_assoc()) {
-        $clinic_arr[stripslashes($row3['clinic'])] = stripslashes($row3['latest_date']);
+        $clinic_arr[stripslashes($row3['clinic'] ?? '')] = stripslashes($row3['latest_date'] ?? '');
     }
 }
 
 if (isset($_GET['r'])) {
-    $reactivate_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
+    $reactivate_id = trim(mysqli_real_escape_string($conn, $_GET['id'] ?? ''));
     mysqli_query($conn, "update `gp_clinics` set `is_active`=1 where `id`='$reactivate_id'");
 }
 if (isset($_GET['d'])) {
-    $del_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
+    $del_id = trim(mysqli_real_escape_string($conn, $_GET['id'] ?? ''));
     mysqli_query($conn, "update `gp_clinics` set `is_active`=0 where `id`='$del_id'");
 }
 
 $option = '';
 $key    = '';
 if (isset($_REQUEST['s'])) {
-    $key       = trim(mysqli_real_escape_string($conn, $_REQUEST['key']));
-    $clinic_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
+    $key       = trim(mysqli_real_escape_string($conn, $_REQUEST['key'] ?? ''));
+    $clinic_id = trim(mysqli_real_escape_string($conn, $_GET['id'] ?? ''));
     if ($clinic_id) {
         $option = "and `id`='$clinic_id'";
     } elseif ($key) {
@@ -231,7 +231,7 @@ if ($pageno < 1)         { $pageno = 1; }
 $limit  = 'LIMIT ' . ($pageno - 1) * $rows_per_page . ',' . $rows_per_page;
 $query  = "SELECT * FROM `gp_clinics` WHERE `is_active`='1' $option order by `name` $limit";
 $result = mysqli_query($conn, $query);
-$num    = mysqli_num_rows($result);
+$num    = $result ? mysqli_num_rows($result) : 0;
 
 $sixMonthsAgo = (new DateTime())->modify('-6 months');
 ?>
@@ -318,11 +318,11 @@ $sixMonthsAgo = (new DateTime())->modify('-6 months');
         if ($num > 0) {
             $i = 0;
             while ($row = $result->fetch_assoc()) {
-                $clinic_id = stripslashes($row['id']);
-                $clinic    = stripslashes($row['name']);
-                $c_phone   = stripslashes($row['phone_1']);
-                $dr_name   = stripslashes($row['dr_name']);
-                $address   = stripslashes($row['address']);
+                $clinic_id = stripslashes($row['id'] ?? '');
+                $clinic    = stripslashes($row['name'] ?? '');
+                $c_phone   = stripslashes($row['phone_1'] ?? '');
+                $dr_name   = stripslashes($row['dr_name'] ?? '');
+                $address   = stripslashes($row['address'] ?? '');
 
                 $latest    = isset($clinic_arr[$clinic_id]) ? $clinic_arr[$clinic_id] : '';
                 $date_color = ($latest && new DateTime($latest) < $sixMonthsAgo) ? '#c53030' : '#111';

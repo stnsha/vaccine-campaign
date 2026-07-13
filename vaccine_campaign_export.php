@@ -1,4 +1,10 @@
 <?php
+require_once('../common/vendor/autoload.php');
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+
 ob_start();
 
 require_once('../lock_adv.php');
@@ -48,9 +54,7 @@ $result = mysqli_query($conn, $query);
 ini_set('memory_limit', '512M');
 ini_set('max_execution_time', 120);
 
-include('../common/PHPexcel/PHPexcel.php');
-
-$objPHPExcel = new PHPExcel();
+$objPHPExcel = new Spreadsheet();
 $objPHPExcel->setActiveSheetIndex(0);
 $sheet = $objPHPExcel->getActiveSheet();
 $sheet->setTitle('Vaccine Campaign Summary');
@@ -125,7 +129,7 @@ if($result && mysqli_num_rows($result) > 0) {
 
         if($day_name == 'Saturday' || $day_name == 'Sunday') {
             $sheet->getStyle('A' . $row_num . ':K' . $row_num)->getFill()->applyFromArray(array(
-                'type'       => PHPExcel_Style_Fill::FILL_SOLID,
+                'type'       => Fill::FILL_SOLID,
                 'startcolor' => array('rgb' => 'FFFDE7')
             ));
         }
@@ -145,7 +149,7 @@ header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetm
 header('Content-Disposition: attachment;filename="' . $filename . '"');
 header('Cache-Control: max-age=0');
 
-$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+$objWriter = IOFactory::createWriter($objPHPExcel, 'Xlsx');
 $objWriter->save('php://output');
 exit;
 ?>

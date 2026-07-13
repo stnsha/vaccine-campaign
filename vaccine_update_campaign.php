@@ -89,10 +89,10 @@ a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color
 </style>
 <?php
 if (isset($_POST['submit'])) {
-    $campaign_id = trim(mysqli_real_escape_string($conn, $_POST['id']));
-    $v_date      = trim(mysqli_real_escape_string($conn, $_POST['v_date']));
-    $outlets     = trim(mysqli_real_escape_string($conn, $_POST['outlets']));
-    $clinic      = trim(mysqli_real_escape_string($conn, $_POST['clinic']));
+    $campaign_id = trim(mysqli_real_escape_string($conn, $_POST['id'] ?? ''));
+    $v_date      = trim(mysqli_real_escape_string($conn, $_POST['v_date'] ?? ''));
+    $outlets     = trim(mysqli_real_escape_string($conn, $_POST['outlets'] ?? ''));
+    $clinic      = trim(mysqli_real_escape_string($conn, $_POST['clinic'] ?? ''));
 
     $sql2    = "SELECT `id` FROM `vaccine_campaign` WHERE `v_date`='$v_date' AND `outlets`='$outlets' AND `id`!='$campaign_id'";
     $result2 = mysqli_query($conn, $sql2);
@@ -122,7 +122,7 @@ if (isset($_POST['submit'])) {
     $connect = 0; include('../common/index_adv.php'); exit;
 }
 
-$campaign_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
+$campaign_id = trim(mysqli_real_escape_string($conn, $_GET['id'] ?? ''));
 $query       = "SELECT * FROM `vaccine_campaign` WHERE `id`='$campaign_id'";
 $result      = mysqli_query($conn, $query);
 $row         = $result ? $result->fetch_assoc() : null;
@@ -136,10 +136,10 @@ if (!$row) { ?>
     $connect = 0; include('../common/index_adv.php'); exit;
 }
 
-$v_date    = stripslashes($row['v_date']);
-$outlets   = stripslashes($row['outlets']);
-$clinic    = stripslashes($row['clinic']);
-$camp_type = stripslashes($row['type']);
+$v_date    = stripslashes($row['v_date'] ?? '');
+$outlets   = stripslashes($row['outlets'] ?? '');
+$clinic    = stripslashes($row['clinic'] ?? '');
+$camp_type = stripslashes($row['type'] ?? '');
 
 $user_outlets_edit = explode(',', $outlet);
 $edit_has_access   = ($vaccine_autho == '1') || in_array($outlets, $user_outlets_edit);
@@ -210,11 +210,13 @@ $(function() {
                         <?php
                         $query2  = "SELECT id, code FROM `outlet` WHERE recycle=0 ORDER BY `code`";
                         $result2 = mysqli_query($conn, $query2);
-                        while ($row2 = $result2->fetch_assoc()) {
-                            $opt_id   = stripslashes($row2['id']);
-                            $opt_code = stripslashes($row2['code']);
-                            $sel      = ($outlets == $opt_id) ? 'selected' : '';
-                            echo "<option $sel value='$opt_id'>$opt_code</option>";
+                        if ($result2) {
+                            while ($row2 = $result2->fetch_assoc()) {
+                                $opt_id   = stripslashes($row2['id'] ?? '');
+                                $opt_code = stripslashes($row2['code'] ?? '');
+                                $sel      = ($outlets == $opt_id) ? 'selected' : '';
+                                echo "<option $sel value='$opt_id'>$opt_code</option>";
+                            }
                         }
                         ?>
                     </select>
@@ -228,11 +230,13 @@ $(function() {
                         <?php
                         $query4  = "SELECT `id`, `dr_name`, `name` FROM `gp_clinics` WHERE is_active=1";
                         $result4 = mysqli_query($conn, $query4);
-                        while ($nt = mysqli_fetch_assoc($result4)) {
-                            $s = ($clinic == $nt['id']) ? 'selected' : '';
-                            echo "<option $s value='" . htmlspecialchars($nt['id']) . "'>"
-                                . htmlspecialchars($nt['name']) . " - " . htmlspecialchars($nt['dr_name'])
-                                . "</option>";
+                        if ($result4) {
+                            while ($nt = mysqli_fetch_assoc($result4)) {
+                                $s = ($clinic == $nt['id']) ? 'selected' : '';
+                                echo "<option $s value='" . htmlspecialchars($nt['id']) . "'>"
+                                    . htmlspecialchars($nt['name']) . " - " . htmlspecialchars($nt['dr_name'])
+                                    . "</option>";
+                            }
                         }
                         ?>
                     </select>

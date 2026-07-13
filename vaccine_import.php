@@ -44,14 +44,14 @@ function convertDateTimeFormat($date, $time) {
 //search for ic_arr
 $query2="select `id`, `ic`, `phone` from `customer`";
 $result2=mysqli_query($conn,$query2);
-$num2 = mysqli_num_rows ($result2);
+$num2 = $result2 ? mysqli_num_rows ($result2) : 0;
 $ic_arr=array();
 $phone_arr=array();
 if ($num2 > 0 ) {
 	while ($row2 = $result2->fetch_assoc()) {
-	$cust_id = stripslashes($row2['id']);
-	$ic = stripslashes($row2['ic']);
-	$phone = stripslashes($row2['phone']);
+	$cust_id = stripslashes($row2['id'] ?? '');
+	$ic = stripslashes($row2['ic'] ?? '');
+	$phone = stripslashes($row2['phone'] ?? '');
 	$ic_arr[$ic]=$cust_id;
 	$phone_arr[$phone]=1;
 }}
@@ -59,11 +59,11 @@ if ($num2 > 0 ) {
 //form item_arr
 $query2="SELECT `item_code` FROM `vaccine_code`";
 $result2=mysqli_query($conn,$query2);
-$num2 = mysqli_num_rows ($result2);
+$num2 = $result2 ? mysqli_num_rows ($result2) : 0;
 $item_arr=array();
 if ($num2 > 0 ) {
 	while ($row2 = $result2->fetch_assoc()) {
-	$item_code = stripslashes($row2['item_code']);
+	$item_code = stripslashes($row2['item_code'] ?? '');
 	$item_arr[$item_code]=1;
 }}
 
@@ -187,9 +187,9 @@ if ($fileSize > 0) {
 						//prevent duplication
 						$sql2="select id from `vaccine_trans` where `outlet_id`='$outlet_id' and `v_date`='$v_date' and `cust_id`='$cust_id' and `item_code`='$item_code' and recycle=0";
 						$result2 = mysqli_query($conn, $sql2);
-						$num=mysqli_num_rows($result2);
-						$row2 = $result2 -> fetch_assoc();
-						@$trans_id= stripslashes($row2["id"]);
+						$num = $result2 ? mysqli_num_rows($result2) : 0;
+						$row2 = $result2 ? $result2 -> fetch_assoc() : null;
+						$trans_id = $row2 ? stripslashes($row2['id'] ?? '') : '';
 						if(!$trans_id){
 
 							// Resolve campaign: create if none exists for this outlet+date, else use existing
@@ -202,7 +202,7 @@ if ($fileSize > 0) {
 								$camp_r = mysqli_query($conn, $camp_q);
 								$camp_row = $camp_r ? mysqli_fetch_assoc($camp_r) : null;
 								if($camp_row){
-									$campaign_id = (int)stripslashes($camp_row['id']);
+									$campaign_id = (int)stripslashes($camp_row['id'] ?? '');
 								} else {
 									$camp_ins = "INSERT INTO vaccine_campaign (id, v_date, outlets, clinic, type, status) VALUES (NULL, '$date_only', '$outlet_id', '$clinic_id', '2', '1')";
 									mysqli_query($conn, $camp_ins);
@@ -306,19 +306,19 @@ $().ready(function() {
 				<?php
 				$query4="SELECT outlet FROM  `staff` where id=$id_user";
 				$result4 = mysqli_query($conn,$query4);
-				$row4 = $result4 -> fetch_assoc();
-				@$outlet = stripslashes($row4['outlet']);
+				$row4 = $result4 ? $result4 -> fetch_assoc() : null;
+				$outlet = $row4 ? stripslashes($row4['outlet'] ?? '') : '';
 
 				if($vaccine_autho=='1'){
 				$query3="select `id`, `code` from outlet where recycle='0' and `code` NOT LIKE 'NEC%' AND `code` NOT LIKE 'NHQ%' AND `code` NOT LIKE '%0' AND `code` NOT LIKE '%C' AND `code` NOT LIKE '%HQ' AND `code` NOT LIKE 'NSDW%' order by `code`";
 				$result3=mysqli_query($conn,$query3);
-				$num3 = mysqli_num_rows ($result3);
+				$num3 = $result3 ? mysqli_num_rows ($result3) : 0;
 
 				if ($num3 > 0 ) {
 				$i3=0;
 				$outlet='';
 				while ($row3 = $result3->fetch_assoc()) {
-				$id = stripslashes($row3['id']);
+				$id = stripslashes($row3['id'] ?? '');
 				if($i3=='0'){
 				$outlet.="$id";} else {$outlet.=",$id";}
 				++$i3; } }
@@ -330,8 +330,8 @@ $().ready(function() {
 					foreach ($e_outlet as $value) {
 					$query2="SELECT code FROM `outlet` where id='$value' limit 0,1";
 					$result2=mysqli_query($conn,$query2);
-					$row2 = $result2 -> fetch_assoc();
-					@$code = stripslashes($row2['code']);
+					$row2 = $result2 ? $result2 -> fetch_assoc() : null;
+					$code = $row2 ? stripslashes($row2['code'] ?? '') : '';
 					echo "<option value='$value'>$code</option>";
 					}
 					echo "</select>";

@@ -16,8 +16,8 @@ if (isset($_POST['submit'])) {
 
     $query2  = "SELECT count(id) as count FROM `gp_clinics` where `name`='$clinic' and `phone_1`='$c_phone' and is_active=1 limit 0,1";
     $result2 = mysqli_query($conn, $query2);
-    $row2    = $result2->fetch_assoc();
-    @$count  = stripslashes($row2['count']);
+    $row2    = $result2 ? $result2->fetch_assoc() : null;
+    $count   = $row2 ? (int)($row2['count'] ?? 0) : 0;
 
     if ($count == 0) {
         $query3  = "INSERT INTO `gp_clinics` (`id`, `name`, `phone_1`, `phone_2`, `email`, `dr_name`, `address`, `is_active`) VALUES (NULL, '$clinic', '$c_phone', '$phone_2', '$email', '$dr_name', '$c_address', '1')";

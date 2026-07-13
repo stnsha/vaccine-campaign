@@ -6,8 +6,8 @@ include('../common/index_adv.php');
 ob_end_clean();
 header('Content-Type: application/json');
 
-$outlet_id = trim(mysqli_real_escape_string($conn, $_GET['outlet_id']));
-$v_date    = trim(mysqli_real_escape_string($conn, $_GET['v_date']));
+$outlet_id = trim(mysqli_real_escape_string($conn, $_GET['outlet_id'] ?? ''));
+$v_date    = trim(mysqli_real_escape_string($conn, $_GET['v_date'] ?? ''));
 $clinic_id = isset($_GET['clinic_id']) ? (int)$_GET['clinic_id'] : 0;
 
 if(!$outlet_id || !$v_date) {

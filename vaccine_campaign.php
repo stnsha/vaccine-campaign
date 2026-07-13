@@ -163,7 +163,7 @@ a.upd-success:hover, .upd-success:hover { background: #ecfdf5 !important; border
 }
 </style>
 <?php
-$campaign_id = trim(mysqli_real_escape_string($conn, $_REQUEST['id']));
+$campaign_id = trim(mysqli_real_escape_string($conn, $_REQUEST['id'] ?? ''));
 
 $query  = "SELECT vc.id, vc.v_date, vc.outlets AS outlet_id, vc.type, vc.status,
            vc.clinic AS clinic_id,
@@ -226,7 +226,7 @@ $reminder_message_encoded = rawurlencode($reminder_message);
 $reminder_links = array();
 $reminder_candidates = array($campaign['outlet_office1'], $campaign['outlet_office2']);
 foreach ($reminder_candidates as $raw_phone) {
-    $contact = preg_replace('/\D/', '', $raw_phone);
+    $contact = preg_replace('/\D/', '', $raw_phone ?? '');
     if ($contact !== '' && substr($contact, 0, 2) == '01') {
         $reminder_links[] = array('display' => $raw_phone, 'number' => '6' . $contact);
     }
@@ -325,19 +325,19 @@ $status_color = array('0' => '#FF6600', '1' => '#008800', '2' => '#0000CC', '3' 
         </tr>
         <tr>
             <th class="info-th">Clinic</th>
-            <td><?php echo htmlspecialchars($campaign['name']); ?></td>
+            <td><?php echo htmlspecialchars($campaign['name'] ?? ''); ?></td>
         </tr>
         <tr>
             <th class="info-th">Doctor</th>
-            <td><?php echo htmlspecialchars($campaign['dr_name']); ?></td>
+            <td><?php echo htmlspecialchars($campaign['dr_name'] ?? ''); ?></td>
         </tr>
         <tr>
             <th class="info-th">Clinic Contact</th>
-            <td><?php echo htmlspecialchars($campaign['phone_1']); ?></td>
+            <td><?php echo htmlspecialchars($campaign['phone_1'] ?? ''); ?></td>
         </tr>
         <tr>
             <th class="info-th">Clinic Address</th>
-            <td><?php echo htmlspecialchars($campaign['address']); ?></td>
+            <td><?php echo htmlspecialchars($campaign['address'] ?? ''); ?></td>
         </tr>
         <tr>
             <th class="info-th">Campaign Type</th>
@@ -483,13 +483,13 @@ $status_color = array('0' => '#FF6600', '1' => '#008800', '2' => '#0000CC', '3' 
                 <td style="text-align:center !important;"><input type="checkbox" name="bulk_print[]" value="<?php echo $tr['id']; ?>" checked /></td>
                 <td style="text-align:center !important;"><?php echo $n++; ?></td>
                 <td><?php echo htmlspecialchars($tr_inv); ?></td>
-                <td><?php echo htmlspecialchars($tr['customer_name']); ?></td>
-                <td><?php echo htmlspecialchars($tr['ic']); ?></td>
+                <td><?php echo htmlspecialchars($tr['customer_name'] ?? ''); ?></td>
+                <td><?php echo htmlspecialchars($tr['ic'] ?? ''); ?></td>
                 <td>
-                    <?php echo htmlspecialchars($tr['item_code']); ?>
+                    <?php echo htmlspecialchars($tr['item_code'] ?? ''); ?>
                     <?php if ($tr['item_name']) { echo '<br/><small style="color:#6b7280 !important;">' . htmlspecialchars($tr['item_name']) . '</small>'; } ?>
                 </td>
-                <td><?php echo htmlspecialchars($tr['operator_name']); ?></td>
+                <td><?php echo htmlspecialchars($tr['operator_name'] ?? ''); ?></td>
                 <td>
                     <?php if ($user_has_access) { ?>
                     <select onchange="updateTransStatus(this.value, <?php echo $tr['id']; ?>)" style="font-size:12px !important;min-width:100px !important;">
@@ -503,7 +503,7 @@ $status_color = array('0' => '#FF6600', '1' => '#008800', '2' => '#0000CC', '3' 
                     <b style="color:<?php echo $s_color; ?> !important;font-size:13px !important;"><?php echo $s_label; ?></b>
                     <?php } ?>
                 </td>
-                <td><?php echo htmlspecialchars($tr['remark']); ?></td>
+                <td><?php echo htmlspecialchars($tr['remark'] ?? ''); ?></td>
                 <td style="text-align:center !important;">
                     <div><a href="vaccine_update.php?id=<?php echo $tr['id']; ?>" class="tbl-action-link" title="Edit">
                         <img src="../common/img/edit.png" width="14px" />

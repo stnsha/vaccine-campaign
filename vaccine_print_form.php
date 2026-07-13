@@ -66,11 +66,11 @@ ini_set('memory_limit', '128M');
 //set limit for time
 ini_set('max_execution_time', 6000);
 
-$bulk_print =$_POST['bulk_print'];
-$print_type =$_POST['print_type'];
+$bulk_print =isset($_POST['bulk_print']) ? $_POST['bulk_print'] : array();
+$print_type =$_POST['print_type'] ?? '';
 $per_print_list= implode(",",$bulk_print);
-$position =$_POST['position'];
-$staff =$_POST['staff'];
+$position =$_POST['position'] ?? '';
+$staff =$_POST['staff'] ?? '';
 
 if($print_type=='1'){
 	?>
@@ -106,13 +106,14 @@ if($print_type=='1'){
 			<td class="report-content-cell">
 	<?php
 		//form clinic_array
+		$clinic_array = array();
 		$query2="SELECT clinic, outlet_id FROM `vaccine_trans` where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`id` in ($per_print_list) and status=0 group by clinic";
 		$result2=mysqli_query($conn,$query2);
-		$num2 = mysqli_num_rows($result2);
+		$num2 = $result2 ? mysqli_num_rows($result2) : 0;
 		if($num2>0){
 			while ($row2 = $result2->fetch_assoc()) {
-				$clinic_id = stripslashes($row2['clinic']);
-				$outlet_id = stripslashes($row2['outlet_id']);
+				$clinic_id = stripslashes($row2['clinic'] ?? '');
+				$outlet_id = stripslashes($row2['outlet_id'] ?? '');
 				$clinic_array[]=array($clinic_id, $outlet_id);
 			}
 		}
@@ -125,22 +126,22 @@ if($print_type=='1'){
 			//search for outlet info
 			$query4="SELECT `code`, `comp_name`, `office1`, `office2`, `addr` FROM `outlet` WHERE `id`='$outlet_id' limit 0,1";
 			$result4 = mysqli_query($conn, $query4);
-			$row4 = $result4 -> fetch_assoc();
-			@$code= stripslashes($row4["code"]);
-			@$comp_name= stripslashes($row4["comp_name"]);
-			@$office1= stripslashes($row4["office1"]);
-			@$office2= stripslashes($row4["office2"]);
-			@$addr= stripslashes($row4["addr"]);
+			$row4 = $result4 ? $result4 -> fetch_assoc() : null;
+			$code= $row4 ? stripslashes($row4['code'] ?? '') : '';
+			$comp_name= $row4 ? stripslashes($row4['comp_name'] ?? '') : '';
+			$office1= $row4 ? stripslashes($row4['office1'] ?? '') : '';
+			$office2= $row4 ? stripslashes($row4['office2'] ?? '') : '';
+			$addr= $row4 ? stripslashes($row4['addr'] ?? '') : '';
 			$addr=nl2br(trim($addr));
 
 			//search clinic info
 			$query3="SELECT * FROM `gp_clinics` WHERE `id`='$clinic_id' limit 0,1";
 			$result3 = mysqli_query($conn, $query3);
-			$row3 = $result3 -> fetch_assoc();
-			@$clinic= stripslashes($row3["name"]);
-			@$c_phone= stripslashes($row3["phone_1"]);
-			@$dr_name= stripslashes($row3["dr_name"]);
-			@$address= stripslashes($row3["address"]);
+			$row3 = $result3 ? $result3 -> fetch_assoc() : null;
+			$clinic= $row3 ? stripslashes($row3['name'] ?? '') : '';
+			$c_phone= $row3 ? stripslashes($row3['phone_1'] ?? '') : '';
+			$dr_name= $row3 ? stripslashes($row3['dr_name'] ?? '') : '';
+			$address= $row3 ? stripslashes($row3['address'] ?? '') : '';
 			$address=nl2br(trim($address));
 
 				echo "<div class='article'><br><div><b>$clinic</b></div><div>$address</div><div class='container'><div>$c_phone</div><div align='right'>".date('d-m-Y')."</div></div>";
@@ -161,40 +162,40 @@ if($print_type=='1'){
 			<?php
 			$query="SELECT `vaccine_trans`.`id`, `vaccine_trans`.`timestamp`, `vaccine_trans`.`cust_id`, `vaccine_trans`.`item_code`, `vaccine_trans`.`batch_num`, `vaccine_trans`.`expiry_date`, `vaccine_trans`.`status`, `vaccine_trans`.`v_date`, `vaccine_trans`.`outlet_id` FROM `vaccine_trans` where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`id` in ($per_print_list) and `vaccine_trans`.`status`=0 and `vaccine_trans`.`clinic`='$clinic_id' order by vaccine_trans.v_date, vaccine_trans.outlet_id, vaccine_trans.cust_id";
 			$result=mysqli_query($conn,$query);
-			$num = mysqli_num_rows ($result);
+			$num = $result ? mysqli_num_rows ($result) : 0;
 			if ($num > 0 ) {
 			$i=0;
 			while ($row = $result->fetch_assoc()) {
-			$trans_id = stripslashes($row['id']);
-			$timestamp = stripslashes($row['timestamp']);
-			$cust_id = stripslashes($row['cust_id']);
+			$trans_id = stripslashes($row['id'] ?? '');
+			$timestamp = stripslashes($row['timestamp'] ?? '');
+			$cust_id = stripslashes($row['cust_id'] ?? '');
 				//search for customer name, IC, and phone
 				$query3="select `customer_name`, `ic`, `phone` from `customer` where `id`='$cust_id' limit 0,1";
 				$result3 = mysqli_query($conn, $query3);
-				$row3 = $result3 -> fetch_assoc();
-				@$customer_name= stripslashes($row3["customer_name"]);
-				@$ic= stripslashes($row3["ic"]);
-				@$phone= stripslashes($row3["phone"]);
+				$row3 = $result3 ? $result3 -> fetch_assoc() : null;
+				$customer_name= $row3 ? stripslashes($row3['customer_name'] ?? '') : '';
+				$ic= $row3 ? stripslashes($row3['ic'] ?? '') : '';
+				$phone= $row3 ? stripslashes($row3['phone'] ?? '') : '';
 				$hp=preg_replace('/\D/', '', $phone);
 				$prefix='60';
 				$prefix2='6';
 				if(substr("$hp", 0, 2)=='01'){$new="$prefix2$hp";} else if(substr("$hp", 0, 1)=='1'){$new="$prefix$hp";} else {$new="$hp";}
-			$outlet_id = stripslashes($row['outlet_id']);
+			$outlet_id = stripslashes($row['outlet_id'] ?? '');
 				//search for outlet code
 				$query3="SELECT `code` FROM `outlet` WHERE `id`='$outlet_id' limit 0,1";
 				$result3 = mysqli_query($conn, $query3);
-				$row3 = $result3 -> fetch_assoc();
-				@$code= stripslashes($row3["code"]);
-			$item_code = stripslashes($row['item_code']);
+				$row3 = $result3 ? $result3 -> fetch_assoc() : null;
+				$code= $row3 ? stripslashes($row3['code'] ?? '') : '';
+			$item_code = stripslashes($row['item_code'] ?? '');
 				//search for item description
 				$query3="SELECT `name` FROM `simple` WHERE `item_code`='$item_code' limit 0,1";
 				$result3 = mysqli_query($conn, $query3);
-				$row3 = $result3 -> fetch_assoc();
-				@$description= stripslashes($row3["name"]);
-			$batch_num = stripslashes($row['batch_num']);
-			$expiry_date = stripslashes($row['expiry_date']);
-			$status = stripslashes($row['status']);
-			$v_date = stripslashes($row['v_date']);
+				$row3 = $result3 ? $result3 -> fetch_assoc() : null;
+				$description= $row3 ? stripslashes($row3['name'] ?? '') : '';
+			$batch_num = stripslashes($row['batch_num'] ?? '');
+			$expiry_date = stripslashes($row['expiry_date'] ?? '');
+			$status = stripslashes($row['status'] ?? '');
+			$v_date = stripslashes($row['v_date'] ?? '');
 
 			//calculate numbering asc
 			$r=$i+1;

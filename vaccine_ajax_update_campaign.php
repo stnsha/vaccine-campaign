@@ -6,8 +6,8 @@ include('../common/index_adv.php');
 ob_end_clean();
 header('Content-Type: application/json');
 
-$action      = trim(mysqli_real_escape_string($conn, $_POST['action']));
-$campaign_id = trim(mysqli_real_escape_string($conn, $_POST['campaign_id']));
+$action      = trim(mysqli_real_escape_string($conn, $_POST['action'] ?? ''));
+$campaign_id = trim(mysqli_real_escape_string($conn, $_POST['campaign_id'] ?? ''));
 
 // Load campaign for permission check
 $q = "SELECT type, outlets, status FROM vaccine_campaign WHERE id='$campaign_id'";
@@ -26,7 +26,7 @@ $user_outlets    = explode(',', $outlet);
 $user_has_access = ($vaccine_autho == '1') || in_array($camp_outlet, $user_outlets);
 
 if($action == 'update_status') {
-    $new_status = trim(mysqli_real_escape_string($conn, $_POST['status']));
+    $new_status = trim(mysqli_real_escape_string($conn, $_POST['status'] ?? ''));
 
     $can_update = false;
     if($camp_type == '1') {

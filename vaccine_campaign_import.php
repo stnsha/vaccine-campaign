@@ -1,4 +1,8 @@
 <?php
+require_once('../common/vendor/autoload.php');
+
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 require_once('../lock_adv.php');
 $connect = 1;
 include('../common/index_adv.php');
@@ -9,8 +13,10 @@ if (isset($_POST['submit'])) {
     $query_outlet  = "SELECT `id`, `code` FROM `outlet` WHERE recycle = 0";
     $result_outlet = mysqli_query($conn, $query_outlet);
     $outlet_arr    = array();
-    while ($row_outlet = $result_outlet->fetch_assoc()) {
-        $outlet_arr[stripslashes($row_outlet['code'])] = stripslashes($row_outlet['id']);
+    if ($result_outlet) {
+        while ($row_outlet = $result_outlet->fetch_assoc()) {
+            $outlet_arr[stripslashes($row_outlet['code'] ?? '')] = stripslashes($row_outlet['id'] ?? '');
+        }
     }
 
     $fileName = $_FILES['userfile']['name'];
@@ -36,11 +42,9 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
     ini_set('memory_limit', '2000M');
     ini_set('max_execution_time', 30000);
 
-    require_once('../common/PHPexcel/PHPExcel/IOFactory.php');
-
     try {
-        $inputFileType = PHPExcel_IOFactory::identify($tmpName);
-        $objReader     = PHPExcel_IOFactory::createReader($inputFileType);
+        $inputFileType = IOFactory::identify($tmpName);
+        $objReader     = IOFactory::createReader($inputFileType);
         $objPHPExcel   = $objReader->load($tmpName);
     } catch (Exception $e) {
         die('Error loading file "' . pathinfo($fileName, PATHINFO_BASENAME) . '": ' . $e->getMessage());
@@ -88,7 +92,7 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
         $date_esc  = $conn->real_escape_string($date);
 
         $chk = mysqli_query($conn, "SELECT id FROM vaccine_campaign WHERE v_date='$date_esc' AND outlets='$outlet_id' LIMIT 1");
-        if (mysqli_fetch_assoc($chk)) {
+        if ($chk && mysqli_fetch_assoc($chk)) {
             $errors[] = "Row $row: Campaign for outlet $code on $date already exists — skipped.";
             continue;
         }

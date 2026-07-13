@@ -11,19 +11,19 @@ function json_err($msg) {
     exit;
 }
 
-$customer_name = trim(mysqli_real_escape_string($conn, $_POST['name']));
+$customer_name = trim(mysqli_real_escape_string($conn, $_POST['name'] ?? ''));
 $customer_name = ucwords(strtolower($customer_name));
-$ic1           = trim(mysqli_real_escape_string($conn, $_POST['ic1']));
-$ic2           = trim(mysqli_real_escape_string($conn, $_POST['ic2']));
-$ic3           = trim(mysqli_real_escape_string($conn, $_POST['ic3']));
+$ic1           = trim(mysqli_real_escape_string($conn, $_POST['ic1'] ?? ''));
+$ic2           = trim(mysqli_real_escape_string($conn, $_POST['ic2'] ?? ''));
+$ic3           = trim(mysqli_real_escape_string($conn, $_POST['ic3'] ?? ''));
 $ic            = "$ic1$ic2$ic3";
-$phone         = preg_replace('/\D/', '', trim(mysqli_real_escape_string($conn, $_POST['phone'])));
-$child_num     = trim(mysqli_real_escape_string($conn, $_POST['child_num']));
-$language      = trim(mysqli_real_escape_string($conn, $_POST['language']));
-$race          = trim(mysqli_real_escape_string($conn, $_POST['race']));
-$nationality   = strtoupper(trim(mysqli_real_escape_string($conn, $_POST['nationality'])));
-$email         = trim(mysqli_real_escape_string($conn, $_POST['email']));
-$c_addr        = trim(mysqli_real_escape_string($conn, $_POST['addr']));
+$phone         = preg_replace('/\D/', '', trim(mysqli_real_escape_string($conn, $_POST['phone'] ?? '')));
+$child_num     = trim(mysqli_real_escape_string($conn, $_POST['child_num'] ?? ''));
+$language      = trim(mysqli_real_escape_string($conn, $_POST['language'] ?? ''));
+$race          = trim(mysqli_real_escape_string($conn, $_POST['race'] ?? ''));
+$nationality   = strtoupper(trim(mysqli_real_escape_string($conn, $_POST['nationality'] ?? '')));
+$email         = trim(mysqli_real_escape_string($conn, $_POST['email'] ?? ''));
+$c_addr        = trim(mysqli_real_escape_string($conn, $_POST['addr'] ?? ''));
 
 if (!empty($child_num)) { $phone = $phone . "@$child_num"; }
 
@@ -39,11 +39,11 @@ if ($fragment_day   > 31 || $fragment_day   == '00') { json_err('Invalid IC: day
 
 // Check phone duplication
 $chk_phone = mysqli_query($conn, "SELECT id FROM customer WHERE phone='$phone' LIMIT 1");
-if (mysqli_num_rows($chk_phone) > 0) { json_err('This phone number is already registered.'); }
+if ($chk_phone && mysqli_num_rows($chk_phone) > 0) { json_err('This phone number is already registered.'); }
 
 // Check IC duplication
 $chk_ic = mysqli_query($conn, "SELECT id FROM customer WHERE ic='$ic' LIMIT 1");
-if (mysqli_num_rows($chk_ic) > 0) { json_err('This IC is already registered.'); }
+if ($chk_ic && mysqli_num_rows($chk_ic) > 0) { json_err('This IC is already registered.'); }
 
 // Derive gender and birth_date from IC
 $gender_digit    = substr($ic3, -1);

@@ -92,14 +92,14 @@ if($vaccine_autho=='1') {
     // Admin: can view all outlets
     $query_user_outlets = "SELECT id FROM outlet WHERE recycle='0' ORDER BY code";
     $result_user_outlets = mysqli_query($conn, $query_user_outlets);
-    $num_user_outlets = mysqli_num_rows($result_user_outlets);
+    $num_user_outlets = $result_user_outlets ? mysqli_num_rows($result_user_outlets) : 0;
 
     $user_outlet_list = '';
     $user_outlet_array = array();
     if($num_user_outlets > 0) {
         $i_outlet = 0;
         while($row_outlet = $result_user_outlets->fetch_assoc()) {
-            $o_id = stripslashes($row_outlet['id']);
+            $o_id = stripslashes($row_outlet['id'] ?? '');
             if($i_outlet == 0) {
                 $user_outlet_list .= "$o_id";
             } else {
@@ -113,13 +113,13 @@ if($vaccine_autho=='1') {
     // Regular staff: only their assigned outlet(s)
     $query_user_outlets = "SELECT outlet FROM staff WHERE id='$id_user'";
     $result_user_outlets = mysqli_query($conn, $query_user_outlets);
-    $row_user_outlets = $result_user_outlets->fetch_assoc();
-    $user_outlet_list = stripslashes($row_user_outlets['outlet']);
+    $row_user_outlets = $result_user_outlets ? $result_user_outlets->fetch_assoc() : null;
+    $user_outlet_list = $row_user_outlets ? stripslashes($row_user_outlets['outlet'] ?? '') : '';
     $user_outlet_array = explode(",", $user_outlet_list);
 }
 
 // Handle outlet selection
-$outlet_selected = trim(mysqli_real_escape_string($conn, $_REQUEST['outlet_selected']));
+$outlet_selected = trim(mysqli_real_escape_string($conn, $_REQUEST['outlet_selected'] ?? ''));
 
 // Validate that selected outlet is in user's accessible outlets
 if($outlet_selected != '') {
@@ -134,7 +134,7 @@ if($outlet_selected != '') {
 }
 
 /* draws a calendar */
-function draw_calendar($month, $year, $vaccine_campaigns = array(), $conn) {
+function draw_calendar($month, $year, $vaccine_campaigns, $conn) {
 
     $calendar = '<table cellpadding="0" cellspacing="0" class="calendar" width="100%">';
 
@@ -268,8 +268,8 @@ function draw_calendar($month, $year, $vaccine_campaigns = array(), $conn) {
 }
 
 /* date settings */
-$month = (int) ($_REQUEST['month'] ? $_REQUEST['month'] : date('m'));
-$year  = (int)  ($_REQUEST['year']  ? $_REQUEST['year']  : date('Y'));
+$month = (int) (!empty($_REQUEST['month']) ? $_REQUEST['month'] : date('m'));
+$year  = (int)  (!empty($_REQUEST['year'])  ? $_REQUEST['year']  : date('Y'));
 
 /* select month control */
 $select_month_control = '<select name="month" id="month" onchange="submit()">';
@@ -345,9 +345,11 @@ while($row = mysqli_fetch_assoc($result)) {
                 } else {
                     echo "<option value=''>All My Outlets</option>";
                 }
-                while($nt = mysqli_fetch_array($result_outlet)) {
-                    if($outlet_selected == $nt['id']) { $s = "selected"; } else { $s = ""; }
-                    echo "<option value='$nt[id]' $s>$nt[code]</option>";
+                if ($result_outlet) {
+                    while($nt = mysqli_fetch_array($result_outlet)) {
+                        if($outlet_selected == $nt['id']) { $s = "selected"; } else { $s = ""; }
+                        echo "<option value='$nt[id]' $s>$nt[code]</option>";
+                    }
                 }
                 echo "</select>";
                 ?>

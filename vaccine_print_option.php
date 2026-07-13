@@ -139,22 +139,23 @@ function view_my_report() {
 }
 </script>
 <?php
-$date_start = trim(mysqli_real_escape_string($conn, $_REQUEST['s']));
-$date_end   = trim(mysqli_real_escape_string($conn, $_REQUEST['e']));
-$outlet_id  = trim(mysqli_real_escape_string($conn, $_REQUEST['o']));
-$status     = trim(mysqli_real_escape_string($conn, $_REQUEST['status']));
+$date_start = trim(mysqli_real_escape_string($conn, $_REQUEST['s'] ?? ''));
+$date_end   = trim(mysqli_real_escape_string($conn, $_REQUEST['e'] ?? ''));
+$outlet_id  = trim(mysqli_real_escape_string($conn, $_REQUEST['o'] ?? ''));
+$status     = trim(mysqli_real_escape_string($conn, $_REQUEST['status'] ?? ''));
+$option2 = '';
 if ($status || $status == 0) { $option2 = "and `vaccine_trans`.`status`='$status'"; }
-$type = trim(mysqli_real_escape_string($conn, $_REQUEST['type']));
+$type = trim(mysqli_real_escape_string($conn, $_REQUEST['type'] ?? ''));
 
 if ($vaccine_autho == '1') {
     $query3  = "select id from outlet where recycle='0' order by code";
     $result3 = mysqli_query($conn, $query3);
-    $num3    = mysqli_num_rows($result3);
+    $num3    = $result3 ? mysqli_num_rows($result3) : 0;
+    $outlet  = '';
     if ($num3 > 0) {
         $i3     = 0;
-        $outlet = '';
         while ($row3 = $result3->fetch_assoc()) {
-            $o_id = stripslashes($row3['id']);
+            $o_id = stripslashes($row3['id'] ?? '');
             if ($i3 == '0') { $outlet .= "$o_id"; } else { $outlet .= ",$o_id"; }
             ++$i3;
         }
@@ -188,9 +189,9 @@ if ($vaccine_autho == '1') {
                     foreach ($e_outlet as $value) {
                         $query2  = "SELECT id, code FROM `outlet` where id='$value' limit 0,1";
                         $result2 = mysqli_query($conn, $query2);
-                        $row2    = $result2->fetch_assoc();
-                        @$id   = stripslashes($row2['id']);
-                        @$code = stripslashes($row2['code']);
+                        $row2    = $result2 ? $result2->fetch_assoc() : null;
+                        $id   = $row2 ? stripslashes($row2['id'] ?? '') : '';
+                        $code = $row2 ? stripslashes($row2['code'] ?? '') : '';
                         if ($outlet_id == $id) { $v = "selected"; } else { $v = ""; }
                         echo "<option $v value='$value'>$code</option>";
                     }
@@ -238,20 +239,21 @@ if ($vaccine_autho == '1') {
             }
             $query  = "SELECT `vaccine_trans`.`id`, `vaccine_trans`.`timestamp`, `vaccine_trans`.`cust_id`, `vaccine_trans`.`item_code`, `vaccine_trans`.`remark`, `vaccine_trans`.`status`, `vaccine_trans`.`operator`, `vaccine_trans`.`v_date`, `vaccine_trans`.`outlet_id`, `gp_clinics`.`name`, `gp_clinics`.`dr_name` FROM `vaccine_trans` left join gp_clinics on vaccine_trans.clinic=gp_clinics.id where `vaccine_trans`.`recycle`=0 and `vaccine_trans`.`v_date` between '$date_start 00:00:00' and '$date_end 23:59:59' $option $option2 order by vaccine_trans.v_date, vaccine_trans.outlet_id, vaccine_trans.cust_id";
             $result = mysqli_query($conn, $query);
-            $num    = mysqli_num_rows($result);
+            $num    = $result ? mysqli_num_rows($result) : 0;
             if ($num > 0) {
                 $i = 0;
                 while ($row = $result->fetch_assoc()) {
-                    $trans_id  = stripslashes($row['id']);
-                    $timestamp = stripslashes($row['timestamp']);
-                    $cust_id   = stripslashes($row['cust_id']);
+                    $trans_id  = stripslashes($row['id'] ?? '');
+                    $timestamp = stripslashes($row['timestamp'] ?? '');
+                    $cust_id   = stripslashes($row['cust_id'] ?? '');
+                    $dr_name   = stripslashes($row['dr_name'] ?? '');
 
                     $query3  = "select `customer_name`, `ic`, `phone` from `customer` where `id`='$cust_id' limit 0,1";
                     $result3 = mysqli_query($conn, $query3);
-                    $row3    = $result3->fetch_assoc();
-                    @$customer_name = stripslashes($row3["customer_name"]);
-                    @$ic            = stripslashes($row3["ic"]);
-                    @$phone         = stripslashes($row3["phone"]);
+                    $row3    = $result3 ? $result3->fetch_assoc() : null;
+                    $customer_name = $row3 ? stripslashes($row3['customer_name'] ?? '') : '';
+                    $ic            = $row3 ? stripslashes($row3['ic'] ?? '') : '';
+                    $phone         = $row3 ? stripslashes($row3['phone'] ?? '') : '';
                     $hp      = preg_replace('/\D/', '', $phone);
                     $prefix2 = '6';
                     if (substr("$hp", 0, 2) == '01' || substr("$hp", 0, 1) == '1') {
@@ -260,29 +262,28 @@ if ($vaccine_autho == '1') {
                         $new = htmlspecialchars($hp);
                     }
 
-                    $outlet_id_row = stripslashes($row['outlet_id']);
+                    $outlet_id_row = stripslashes($row['outlet_id'] ?? '');
                     $query3  = "SELECT `code` FROM `outlet` WHERE `id`='$outlet_id_row' limit 0,1";
                     $result3 = mysqli_query($conn, $query3);
-                    $row3    = $result3->fetch_assoc();
-                    @$code = stripslashes($row3["code"]);
+                    $row3    = $result3 ? $result3->fetch_assoc() : null;
+                    $code = $row3 ? stripslashes($row3['code'] ?? '') : '';
 
-                    $item_code = stripslashes($row['item_code']);
+                    $item_code = stripslashes($row['item_code'] ?? '');
                     $query3    = "SELECT `name` FROM `simple` WHERE `item_code`='$item_code' limit 0,1";
                     $result3   = mysqli_query($conn, $query3);
-                    $row3      = $result3->fetch_assoc();
-                    @$description = stripslashes($row3["name"]);
+                    $row3      = $result3 ? $result3->fetch_assoc() : null;
+                    $description = $row3 ? stripslashes($row3['name'] ?? '') : '';
 
-                    $remark   = stripslashes($row['remark']);
-                    $status   = stripslashes($row['status']);
-                    $operator = stripslashes($row['operator']);
+                    $remark   = stripslashes($row['remark'] ?? '');
+                    $status   = stripslashes($row['status'] ?? '');
+                    $operator = stripslashes($row['operator'] ?? '');
                     $query4   = "SELECT `nama_staff` FROM `staff` WHERE `id`='$operator' limit 0,1";
                     $result4  = mysqli_query($conn, $query4);
-                    $row4     = $result4->fetch_assoc();
-                    @$staff_name = stripslashes($row4["nama_staff"]);
+                    $row4     = $result4 ? $result4->fetch_assoc() : null;
+                    $staff_name = $row4 ? stripslashes($row4['nama_staff'] ?? '') : '';
 
-                    $v_date  = stripslashes($row['v_date']);
-                    $clinic  = stripslashes($row['name']);
-                    $dr_name = stripslashes($row['dr_name']);
+                    $v_date  = stripslashes($row['v_date'] ?? '');
+                    $clinic  = stripslashes($row['name'] ?? '');
 
                     if ($status == 0)      { $status_label = "Pending"; }
                     elseif ($status == 1)  { $status_label = "Vaccinated"; }

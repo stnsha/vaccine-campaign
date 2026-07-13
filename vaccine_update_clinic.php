@@ -17,8 +17,8 @@ if (isset($_POST['submit'])) {
 
     $query2  = "SELECT count(id) as count FROM `gp_clinics` where `name`='$clinic' and `phone_1`='$c_phone' and id!='$clinic_id' and is_active=1 limit 0,1";
     $result2 = mysqli_query($conn, $query2);
-    $row2    = $result2->fetch_assoc();
-    @$count  = stripslashes($row2['count']);
+    $row2    = $result2 ? $result2->fetch_assoc() : null;
+    $count   = $row2 ? (int)($row2['count'] ?? 0) : 0;
 
     if ($count == 0) {
         $query3  = "UPDATE `gp_clinics` SET `name`='$clinic', `phone_1`='$c_phone', `phone_2`='$phone_2', `email`='$email', `dr_name`='$dr_name', `address`='$address' WHERE `gp_clinics`.`id`=$clinic_id";
@@ -43,16 +43,16 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
         exit;
     }
 } else {
-    $clinic_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
+    $clinic_id = trim(mysqli_real_escape_string($conn, $_GET['id'] ?? ''));
     $query     = "SELECT * FROM `gp_clinics` WHERE `id`='$clinic_id'";
     $result    = mysqli_query($conn, $query);
-    $row       = $result->fetch_assoc();
-    @$clinic  = stripslashes($row['name']);
-    @$c_phone = stripslashes($row['phone_1']);
-    @$phone_2 = stripslashes($row['phone_2']);
-    @$email   = stripslashes($row['email']);
-    @$dr_name = stripslashes($row['dr_name']);
-    @$address = stripslashes($row['address']);
+    $row       = $result ? $result->fetch_assoc() : null;
+    $clinic  = $row ? stripslashes($row['name'] ?? '') : '';
+    $c_phone = $row ? stripslashes($row['phone_1'] ?? '') : '';
+    $phone_2 = $row ? stripslashes($row['phone_2'] ?? '') : '';
+    $email   = $row ? stripslashes($row['email'] ?? '') : '';
+    $dr_name = $row ? stripslashes($row['dr_name'] ?? '') : '';
+    $address = $row ? stripslashes($row['address'] ?? '') : '';
 ?>
 <style type="text/css">
 .idx-panel {

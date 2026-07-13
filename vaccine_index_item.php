@@ -163,30 +163,32 @@ a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color
 $vaccine_arr = array();
 $query6  = "select * from `vaccine_type` where recycle=0";
 $result6 = mysqli_query($conn, $query6);
-$num6    = mysqli_num_rows($result6);
+$num6    = $result6 ? mysqli_num_rows($result6) : 0;
 if ($num6 > 0) {
     $i6 = 0;
     while ($row6 = $result6->fetch_assoc()) {
-        $id           = stripslashes($row6['id']);
-        $vaccine_name = stripslashes($row6['vaccine_name']);
+        $id           = stripslashes($row6['id'] ?? '');
+        $vaccine_name = stripslashes($row6['vaccine_name'] ?? '');
         $vaccine_arr[$id] = $vaccine_name;
         $i6++;
     }
 }
 
 if (isset($_GET['d'])) {
-    $del_id  = trim(mysqli_real_escape_string($conn, $_GET['id']));
+    $del_id  = trim(mysqli_real_escape_string($conn, $_GET['id'] ?? ''));
     $query2  = "delete from `vaccine_code` where `id`='$del_id'";
     $result2 = mysqli_query($conn, $query2);
     echo "<div style='background:#d1fae5;border-left:3px solid #059669;border-radius:6px;padding:8px 14px;margin:6px 0;font-size:13px !important;font-family:Arial,Helvetica,sans-serif !important;color:#065f46 !important;'>Vaccine code deleted.</div>";
 }
 
 $option = '';
+$key = '';
+$selected_vaccine_type = '';
 if (isset($_REQUEST['s'])) {
     $option1 = '';
     $option2 = '';
-    $key                  = trim(mysqli_real_escape_string($conn, $_REQUEST['key']));
-    $selected_vaccine_type = trim(mysqli_real_escape_string($conn, $_REQUEST['vaccine_type']));
+    $key                  = trim(mysqli_real_escape_string($conn, $_REQUEST['key'] ?? ''));
+    $selected_vaccine_type = trim(mysqli_real_escape_string($conn, $_REQUEST['vaccine_type'] ?? ''));
     if ($key) { $option1 = "and (`vaccine_code`.`item_code` like '$key%' or `name` like '$key%')"; }
     if ($selected_vaccine_type) { $option2 = "and `vaccine_type`='$selected_vaccine_type'"; }
     $option = "$option1 $option2";
@@ -207,7 +209,7 @@ if ($pageno < 1)         { $pageno = 1; }
 $limit  = 'LIMIT ' . ($pageno - 1) * $rows_per_page . ',' . $rows_per_page;
 $query  = "select `vaccine_code`.`id` as `id`, `vaccine_code`.`item_code`, `vaccine_type`, `name` from vaccine_code left join simple on vaccine_code.item_code=simple.item_code where 1=1 $option order by `vaccine_type`, name $limit";
 $result = mysqli_query($conn, $query);
-$num    = mysqli_num_rows($result);
+$num    = $result ? mysqli_num_rows($result) : 0;
 ?>
 <div class="idx-panel">
     <!-- Toolbar -->
@@ -294,10 +296,10 @@ $num    = mysqli_num_rows($result);
         if ($num > 0) {
             $i = 0;
             while ($row = $result->fetch_assoc()) {
-                $vaccine_id   = stripslashes($row['id']);
-                $vaccine_type = stripslashes($row['vaccine_type']);
-                $item_code    = stripslashes($row['item_code']);
-                $description  = stripslashes($row['name']);
+                $vaccine_id   = stripslashes($row['id'] ?? '');
+                $vaccine_type = stripslashes($row['vaccine_type'] ?? '');
+                $item_code    = stripslashes($row['item_code'] ?? '');
+                $description  = stripslashes($row['name'] ?? '');
                 $r = (($pageno - 1) * $rows_per_page) + $i + 1;
                 ?>
                 <tr>

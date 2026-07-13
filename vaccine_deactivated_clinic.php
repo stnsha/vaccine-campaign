@@ -187,15 +187,15 @@ $can_edit = (strpos(strtolower($status_semasa), 'pharmacist') !== false
     || $vaccine_autho == 1);
 
 if (isset($_GET['d'])) {
-    $del_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
+    $del_id = trim(mysqli_real_escape_string($conn, $_GET['id'] ?? ''));
     mysqli_query($conn, "update `gp_clinics` set `is_active`=0 where `id`='$del_id'");
 }
 
 $option = '';
 $key    = '';
 if (isset($_REQUEST['s'])) {
-    $key       = trim(mysqli_real_escape_string($conn, $_REQUEST['key']));
-    $clinic_id = trim(mysqli_real_escape_string($conn, $_GET['id']));
+    $key       = trim(mysqli_real_escape_string($conn, $_REQUEST['key'] ?? ''));
+    $clinic_id = trim(mysqli_real_escape_string($conn, $_GET['id'] ?? ''));
     if ($clinic_id) {
         $option = "and `id`='$clinic_id'";
     } elseif ($key) {
@@ -218,7 +218,7 @@ if ($pageno < 1)         { $pageno = 1; }
 $limit  = 'LIMIT ' . ($pageno - 1) * $rows_per_page . ',' . $rows_per_page;
 $query  = "SELECT * FROM `gp_clinics` WHERE `is_active`='0' $option order by `name` $limit";
 $result = mysqli_query($conn, $query);
-$num    = mysqli_num_rows($result);
+$num    = $result ? mysqli_num_rows($result) : 0;
 ?>
 <div class="idx-panel">
     <div class="idx-toolbar">
@@ -298,11 +298,11 @@ $num    = mysqli_num_rows($result);
         if ($num > 0) {
             $i = 0;
             while ($row = $result->fetch_assoc()) {
-                $clinic_id = stripslashes($row['id']);
-                $clinic    = stripslashes($row['name']);
-                $c_phone   = stripslashes($row['phone_1']);
-                $dr_name   = stripslashes($row['dr_name']);
-                $address   = stripslashes($row['address']);
+                $clinic_id = stripslashes($row['id'] ?? '');
+                $clinic    = stripslashes($row['name'] ?? '');
+                $c_phone   = stripslashes($row['phone_1'] ?? '');
+                $dr_name   = stripslashes($row['dr_name'] ?? '');
+                $address   = stripslashes($row['address'] ?? '');
 
                 $hp      = preg_replace('/\D/', '', $c_phone);
                 $prefix2 = '6';

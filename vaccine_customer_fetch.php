@@ -11,7 +11,7 @@ function json_err($msg) {
     exit;
 }
 
-$ic = trim(mysqli_real_escape_string($conn, $_GET['ic']));
+$ic = trim(mysqli_real_escape_string($conn, $_GET['ic'] ?? ''));
 if (!$ic) { json_err('No IC provided.'); }
 
 $query = "SELECT id, customer_name, ic, phone, language, race, nationality, email, c_addr

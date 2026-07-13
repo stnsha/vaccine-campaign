@@ -49,8 +49,8 @@ $count_query = "SELECT COUNT(*) AS cnt
                 LEFT JOIN outlet o ON vc.outlets = o.id
                 WHERE $where_sql";
 $count_result = mysqli_query($conn, $count_query);
-$count_row    = mysqli_fetch_assoc($count_result);
-$total        = (int)$count_row['cnt'];
+$count_row    = $count_result ? mysqli_fetch_assoc($count_result) : null;
+$total        = $count_row ? (int)($count_row['cnt'] ?? 0) : 0;
 $total_pages  = ($total > 0) ? (int)ceil($total / $per_page) : 1;
 $page         = isset($_GET['page']) ? max(1, min((int)$_GET['page'], $total_pages)) : 1;
 $offset       = ($page - 1) * $per_page;
@@ -355,8 +355,8 @@ a.upd-success:hover, .upd-success:hover { background: #ecfdf5 !important; border
             echo "<td style='text-align:center;'>" . $no++ . "</td>";
             echo "<td>" . date('d M Y', strtotime($camp_date)) . "</td>";
             echo "<td>" . $day_name . "</td>";
-            echo "<td>" . htmlspecialchars($row['outlet_code']) . "</td>";
-            echo "<td>" . htmlspecialchars($row['outlet_name']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['outlet_code'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($row['outlet_name'] ?? '') . "</td>";
             echo "<td>" . $type_badge . "</td>";
             echo "<td>" . $clinic_disp . "</td>";
             echo "<td>" . $doctor_disp . "</td>";

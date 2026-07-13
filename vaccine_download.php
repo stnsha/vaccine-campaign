@@ -1,5 +1,5 @@
 <?php
-$dumpfile=$_GET['id'];
+$dumpfile=$_GET['id'] ?? '';
 // We'll be outputting a dumpfile file
 header('Content-type: application/xlsx');
 
