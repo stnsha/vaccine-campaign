@@ -258,7 +258,7 @@ $trans_query  = "SELECT vt.id, vt.status, vt.remark, vt.inv_num, vt.item_code,
                  LEFT JOIN staff s ON vt.operator = s.id
                  LEFT JOIN simple si ON vt.item_code = si.item_code
                  WHERE vt.outlet_id = '$outlet_id'
-                   AND DATE(vt.v_date) = '$v_date'
+                   AND vt.v_date >= '$v_date' AND vt.v_date < '$v_date' + INTERVAL 1 DAY
                    AND vt.recycle = 0
                  ORDER BY vt.id";
 $trans_result = mysqli_query($conn, $trans_query);

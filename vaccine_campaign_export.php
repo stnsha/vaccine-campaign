@@ -36,13 +36,9 @@ if($filter_outlet != '') {
 }
 $where_sql = implode(' AND ', $where);
 
-$query = "SELECT vc.id, vc.v_date, vc.type, vc.status,
+$query = "SELECT vc.id, vc.v_date, vc.type, vc.status, vc.outlets AS outlet_id,
                  o.code AS outlet_code, o.comp_name AS outlet_name,
-                 cl.name AS clinic_name, cl.dr_name,
-                 (SELECT COUNT(*) FROM vaccine_trans
-                   WHERE outlet_id = vc.outlets AND DATE(v_date) = vc.v_date AND recycle = 0) AS total_booked,
-                 (SELECT COUNT(*) FROM vaccine_trans
-                   WHERE outlet_id = vc.outlets AND DATE(v_date) = vc.v_date AND recycle = 0 AND status = '1') AS total_vaccinated
+                 cl.name AS clinic_name, cl.dr_name
           FROM vaccine_campaign vc
           LEFT JOIN outlet o ON vc.outlets = o.id
           LEFT JOIN gp_clinics cl ON vc.clinic = cl.id
@@ -50,6 +46,25 @@ $query = "SELECT vc.id, vc.v_date, vc.type, vc.status,
           ORDER BY vc.v_date ASC, o.code ASC";
 
 $result = mysqli_query($conn, $query);
+
+// Pre-populate booked/vaccinated counts for the whole filtered date range in one query,
+// grouped by outlet+date, instead of a correlated subquery per campaign row.
+$trans_counts = array();
+$counts_query = "SELECT outlet_id, DATE(v_date) AS d,
+                         COUNT(*) AS booked,
+                         SUM(CASE WHEN status = '1' THEN 1 ELSE 0 END) AS vaccinated
+                  FROM vaccine_trans
+                  WHERE v_date >= '$date_from' AND v_date < '$date_to' + INTERVAL 1 DAY AND recycle = 0
+                  GROUP BY outlet_id, DATE(v_date)";
+$counts_result = mysqli_query($conn, $counts_query);
+if ($counts_result) {
+    while ($crow = $counts_result->fetch_assoc()) {
+        $trans_counts[$crow['outlet_id'] . '|' . $crow['d']] = array(
+            'booked'     => (int)$crow['booked'],
+            'vaccinated' => (int)$crow['vaccinated']
+        );
+    }
+}
 
 ini_set('memory_limit', '512M');
 ini_set('max_execution_time', 120);
@@ -121,11 +136,15 @@ if($result && mysqli_num_rows($result) > 0) {
         $sheet->setCellValue('D' . $row_num, $row['outlet_code']);
         $sheet->setCellValue('E' . $row_num, $row['outlet_name']);
         $sheet->setCellValue('F' . $row_num, $type_disp);
+        $count_key = ($row['outlet_id'] ?? '') . '|' . $camp_date;
+        $total_booked     = isset($trans_counts[$count_key]) ? $trans_counts[$count_key]['booked'] : 0;
+        $total_vaccinated = isset($trans_counts[$count_key]) ? $trans_counts[$count_key]['vaccinated'] : 0;
+
         $sheet->setCellValue('G' . $row_num, $clinic_disp);
         $sheet->setCellValue('H' . $row_num, $doctor_disp);
         $sheet->setCellValue('I' . $row_num, $status_disp);
-        $sheet->setCellValue('J' . $row_num, (int) $row['total_booked']);
-        $sheet->setCellValue('K' . $row_num, (int) $row['total_vaccinated']);
+        $sheet->setCellValue('J' . $row_num, $total_booked);
+        $sheet->setCellValue('K' . $row_num, $total_vaccinated);
 
         if($day_name == 'Saturday' || $day_name == 'Sunday') {
             $sheet->getStyle('A' . $row_num . ':K' . $row_num)->getFill()->applyFromArray(array(
