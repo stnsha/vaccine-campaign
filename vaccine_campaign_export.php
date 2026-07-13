@@ -1,5 +1,5 @@
 <?php
-require_once('../common/vendor/autoload.php');
+require_once('vendor/autoload.php');
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
