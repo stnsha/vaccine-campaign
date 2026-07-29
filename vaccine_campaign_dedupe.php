@@ -85,18 +85,30 @@ function vc_dedupe_find_groups($conn, $date_from, $date_to) {
                 $delete_ids[] = $w['id'];
             }
             $keep_id = $with_clinic[0]['id'];
+        } elseif (count($acknowledged) == 0 && count($other) == 0) {
+            $decision  = 'delete';
+            $reason    = 'No acknowledged row and clinic assignment does not distinguish rows; keeping the oldest row (lowest id).';
+            $oldest    = $waiting[0];
+            foreach ($waiting as $w) {
+                if ((int) $w['id'] < (int) $oldest['id']) {
+                    $oldest = $w;
+                }
+            }
+            $delete_ids = array();
+            foreach ($waiting as $w) {
+                if ($w['id'] != $oldest['id']) {
+                    $delete_ids[] = $w['id'];
+                }
+            }
+            $keep_id = $oldest['id'];
         } else {
             $decision   = 'skip';
             $delete_ids = array();
             $keep_id    = null;
             if (count($acknowledged) > 1) {
                 $reason = 'More than one acknowledged row in this group — needs manual review.';
-            } elseif (count($other) > 0) {
-                $reason = 'Group contains a cancelled row — needs manual review.';
-            } elseif (count($acknowledged) == 0 && count($with_clinic) > 1) {
-                $reason = 'No acknowledged row, and more than one row has a clinic assigned — needs manual review.';
             } else {
-                $reason = 'No acknowledged row and no clinic assignment distinguishes rows — needs manual review.';
+                $reason = 'Group contains a cancelled row — needs manual review.';
             }
         }
 
@@ -198,8 +210,9 @@ a.upd-back:hover{background:#d8dde3 !important;border-color:#b0b8c1 !important;}
     <ul>
         <li>Exactly one row is <b>Acknowledged</b> and the other(s) are still <b>Waiting Ack</b> &mdash; keeps the acknowledged row.</li>
         <li>No row is acknowledged, but exactly one row has a <b>clinic assigned</b> and the other(s) don't &mdash; keeps the row with a clinic.</li>
+        <li>No row is acknowledged and clinic assignment doesn't distinguish them &mdash; keeps the <b>oldest row (lowest id)</b>.</li>
     </ul>
-    <p>Groups that don't match either pattern (e.g. multiple acknowledged rows, none acknowledged and clinic doesn't distinguish them, or a cancelled row present) are left untouched and flagged for manual review.</p>
+    <p>Groups that don't match any pattern (multiple acknowledged rows, or a cancelled row present) are left untouched and flagged for manual review.</p>
 
     <form method="get" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="margin-bottom:10px;">
         <input type="hidden" name="action" value="preview" />
