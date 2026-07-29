@@ -56,14 +56,18 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
 
     $errors  = array();
     $inserts = array();
+    $seen    = array();
     $today   = date('Y-m-d');
 
     for ($row = 3; $row <= $highestRow; $row++) {
         $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
 
-        $date = trim($rowData[0][0]);
-        $code = trim($rowData[0][1]);
+        $date = trim((string) $rowData[0][0]);
+        $code = trim((string) $rowData[0][1]);
 
+        if (empty($date) && empty($code)) {
+            continue;
+        }
         if (empty($date)) {
             $errors[] = "Row $row: Missing date.";
             continue;
@@ -80,7 +84,13 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
         if (is_numeric($date)) {
             $date = gmdate('Y-m-d', ($date - 25569) * 86400);
         } else {
-            $date = date('Y-m-d', strtotime($date));
+            $dateObj = DateTime::createFromFormat('d/m/Y', $date);
+            $dtErrors = DateTime::getLastErrors();
+            if (!$dateObj || ($dtErrors && ($dtErrors['warning_count'] > 0 || $dtErrors['error_count'] > 0))) {
+                $errors[] = "Row $row: Invalid date '$date'. Expected DD/MM/YYYY.";
+                continue;
+            }
+            $date = $dateObj->format('Y-m-d');
         }
 
         if ($date < $today) {
@@ -91,12 +101,19 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
         $outlet_id = (int)$outlet_arr[$code];
         $date_esc  = $conn->real_escape_string($date);
 
+        $dup_key = $outlet_id . '|' . $date;
+        if (isset($seen[$dup_key])) {
+            $errors[] = "Row $row: Duplicate row in file for outlet $code on $date — skipped.";
+            continue;
+        }
+
         $chk = mysqli_query($conn, "SELECT id FROM vaccine_campaign WHERE v_date='$date_esc' AND outlets='$outlet_id' LIMIT 1");
         if ($chk && mysqli_fetch_assoc($chk)) {
             $errors[] = "Row $row: Campaign for outlet $code on $date already exists — skipped.";
             continue;
         }
 
+        $seen[$dup_key] = true;
         $inserts[] = array('date' => $date_esc, 'outlet_id' => $outlet_id);
     }
 
