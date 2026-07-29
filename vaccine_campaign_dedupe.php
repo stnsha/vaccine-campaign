@@ -59,6 +59,16 @@ function vc_dedupe_find_groups($conn, $date_from, $date_to) {
             }
         }
 
+        $with_clinic    = array();
+        $without_clinic = array();
+        foreach ($waiting as $w) {
+            if (!empty($w['clinic']) && $w['clinic'] != '0') {
+                $with_clinic[] = $w;
+            } else {
+                $without_clinic[] = $w;
+            }
+        }
+
         if (count($acknowledged) == 1 && count($waiting) >= 1 && count($other) == 0) {
             $decision   = 'delete';
             $reason     = 'Exactly one acknowledged row found; removing waiting-ack duplicate(s).';
@@ -67,16 +77,26 @@ function vc_dedupe_find_groups($conn, $date_from, $date_to) {
                 $delete_ids[] = $w['id'];
             }
             $keep_id = $acknowledged[0]['id'];
+        } elseif (count($acknowledged) == 0 && count($other) == 0 && count($with_clinic) == 1 && count($without_clinic) >= 1) {
+            $decision   = 'delete';
+            $reason     = 'No acknowledged row, but exactly one row has a clinic assigned; removing duplicate(s) without a clinic.';
+            $delete_ids = array();
+            foreach ($without_clinic as $w) {
+                $delete_ids[] = $w['id'];
+            }
+            $keep_id = $with_clinic[0]['id'];
         } else {
             $decision   = 'skip';
             $delete_ids = array();
             $keep_id    = null;
             if (count($acknowledged) > 1) {
                 $reason = 'More than one acknowledged row in this group — needs manual review.';
-            } elseif (count($acknowledged) == 0) {
-                $reason = 'No acknowledged row in this group — cannot determine which to keep.';
-            } else {
+            } elseif (count($other) > 0) {
                 $reason = 'Group contains a cancelled row — needs manual review.';
+            } elseif (count($acknowledged) == 0 && count($with_clinic) > 1) {
+                $reason = 'No acknowledged row, and more than one row has a clinic assigned — needs manual review.';
+            } else {
+                $reason = 'No acknowledged row and no clinic assignment distinguishes rows — needs manual review.';
             }
         }
 
@@ -174,7 +194,12 @@ a.upd-back:hover{background:#d8dde3 !important;border-color:#b0b8c1 !important;}
 </style>
 <div class="idx-panel">
     <h3 style="margin-top:0 !important;">Remove Duplicate Campaigns (August &ndash; December 2026)</h3>
-    <p>A duplicate is two or more campaign rows with the <b>same outlet</b> and the <b>same exact date</b>. When one of them is <b>Acknowledged</b> and the other(s) are still <b>Waiting Ack</b>, this tool removes the waiting-ack duplicate(s) and keeps the acknowledged one. Groups that don't match this pattern are left untouched and flagged for manual review.</p>
+    <p>A duplicate is two or more campaign rows with the <b>same outlet</b> and the <b>same exact date</b>. This tool keeps one row and deletes the rest when:</p>
+    <ul>
+        <li>Exactly one row is <b>Acknowledged</b> and the other(s) are still <b>Waiting Ack</b> &mdash; keeps the acknowledged row.</li>
+        <li>No row is acknowledged, but exactly one row has a <b>clinic assigned</b> and the other(s) don't &mdash; keeps the row with a clinic.</li>
+    </ul>
+    <p>Groups that don't match either pattern (e.g. multiple acknowledged rows, none acknowledged and clinic doesn't distinguish them, or a cancelled row present) are left untouched and flagged for manual review.</p>
 
     <form method="get" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="margin-bottom:10px;">
         <input type="hidden" name="action" value="preview" />
@@ -200,7 +225,7 @@ a.upd-back:hover{background:#d8dde3 !important;border-color:#b0b8c1 !important;}
             <tr>
                 <th>Outlet</th>
                 <th>Date</th>
-                <th>Campaign Rows (id : status)</th>
+                <th>Campaign Rows (id : status : clinic)</th>
                 <th>Action</th>
                 <th>Reason</th>
             </tr>
@@ -208,7 +233,8 @@ a.upd-back:hover{background:#d8dde3 !important;border-color:#b0b8c1 !important;}
                 $code = isset($outlet_arr[$g['outlet_id']]) ? $outlet_arr[$g['outlet_id']] : $g['outlet_id'];
                 $rows_txt = array();
                 foreach ($g['rows'] as $r) {
-                    $rows_txt[] = $r['id'] . ' : ' . vc_status_label($r['status']);
+                    $clinic_txt = (!empty($r['clinic']) && $r['clinic'] != '0') ? $r['clinic'] : 'none';
+                    $rows_txt[] = $r['id'] . ' : ' . vc_status_label($r['status']) . ' : clinic ' . $clinic_txt;
                 }
             ?>
             <tr>
