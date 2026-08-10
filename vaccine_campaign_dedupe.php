@@ -69,7 +69,37 @@ function vc_dedupe_find_groups($conn, $date_from, $date_to) {
             }
         }
 
-        if (count($acknowledged) == 1 && count($waiting) >= 1 && count($other) == 0) {
+        $has_hq_row = false;
+        foreach ($rows as $r) {
+            if ($r['type'] == '1') {
+                $has_hq_row = true;
+                break;
+            }
+        }
+
+        $cust_query = "SELECT COUNT(*) AS cnt
+                       FROM vaccine_trans
+                       WHERE outlet_id = '$outlet_id'
+                         AND v_date >= '$v_date' AND v_date < '$v_date' + INTERVAL 1 DAY
+                         AND recycle = 0";
+        $cust_result = mysqli_query($conn, $cust_query);
+        $cust_count  = 0;
+        if ($cust_result) {
+            $cust_row   = $cust_result->fetch_assoc();
+            $cust_count = (int) $cust_row['cnt'];
+        }
+
+        if ($has_hq_row) {
+            $decision   = 'skip';
+            $reason     = 'Group contains an HQ initiated campaign — needs manual review.';
+            $delete_ids = array();
+            $keep_id    = null;
+        } elseif ($cust_count > 0) {
+            $decision   = 'skip';
+            $reason     = 'Group has ' . $cust_count . ' customer(s) already booked — needs manual review.';
+            $delete_ids = array();
+            $keep_id    = null;
+        } elseif (count($acknowledged) == 1 && count($waiting) >= 1 && count($other) == 0) {
             $decision   = 'delete';
             $reason     = 'Exactly one acknowledged row found; removing waiting-ack duplicate(s).';
             $delete_ids = array();
@@ -212,7 +242,7 @@ a.upd-back:hover{background:#d8dde3 !important;border-color:#b0b8c1 !important;}
         <li>No row is acknowledged, but exactly one row has a <b>clinic assigned</b> and the other(s) don't &mdash; keeps the row with a clinic.</li>
         <li>No row is acknowledged and clinic assignment doesn't distinguish them &mdash; keeps the <b>oldest row (lowest id)</b>.</li>
     </ul>
-    <p>Groups that don't match any pattern (multiple acknowledged rows, or a cancelled row present) are left untouched and flagged for manual review.</p>
+    <p>Groups that don't match any pattern (multiple acknowledged rows, or a cancelled row present) are left untouched and flagged for manual review. A group is also skipped and flagged for manual review when it contains an <b>HQ initiated</b> campaign row, or when any customer is already booked for that outlet+date.</p>
 
     <form method="get" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="margin-bottom:10px;">
         <input type="hidden" name="action" value="preview" />

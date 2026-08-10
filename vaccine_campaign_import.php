@@ -64,6 +64,10 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
 
         $date = trim((string) $rowData[0][0]);
         $code = trim((string) $rowData[0][1]);
+        $ack_raw     = trim((string) ($rowData[0][2] ?? ''));
+        $carepro_raw = trim((string) ($rowData[0][3] ?? ''));
+        $is_ack      = (strcasecmp($ack_raw, 'yes') === 0);
+        $is_carepro  = (strcasecmp($carepro_raw, 'yes') === 0);
 
         if (empty($date) && empty($code)) {
             continue;
@@ -113,14 +117,31 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
             continue;
         }
 
+        // Acknowledge = Yes -> Outlet Initiated (type 2), auto-acknowledged (status 1, no pending ack).
+        // Acknowledge blank -> HQ Initiated (type 1), status 0 (pending outlet ack).
+        $type            = $is_ack ? '2' : '1';
+        $initial_status  = $is_ack ? '1' : '0';
+        // Carepro Mobile Clinic = Yes -> Event Location auto-set to gp_clinics id 722.
+        $clinic_id = $is_carepro ? 722 : 0;
+
         $seen[$dup_key] = true;
-        $inserts[] = array('date' => $date_esc, 'outlet_id' => $outlet_id);
+        $inserts[] = array(
+            'date'      => $date_esc,
+            'outlet_id' => $outlet_id,
+            'type'      => $type,
+            'status'    => $initial_status,
+            'clinic'    => $clinic_id,
+        );
     }
 
     $inserted = 0;
     $failed   = 0;
+    $clinic_manual_needed = false;
     foreach ($inserts as $row_data) {
-        $sql = "INSERT INTO vaccine_campaign (id, v_date, outlets, clinic, type, status) VALUES (NULL, '" . $row_data['date'] . "', '" . $row_data['outlet_id'] . "', '0', '1', '0')";
+        if ($row_data['clinic'] == 0) {
+            $clinic_manual_needed = true;
+        }
+        $sql = "INSERT INTO vaccine_campaign (id, v_date, outlets, clinic, type, status) VALUES (NULL, '" . $row_data['date'] . "', '" . $row_data['outlet_id'] . "', '" . $row_data['clinic'] . "', '" . $row_data['type'] . "', '" . $row_data['status'] . "')";
         if (mysqli_query($conn, $sql)) {
             $inserted++;
         } else {
@@ -221,8 +242,8 @@ a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color
     <?php } ?>
     <?php if (empty($inserts)) { ?>
     <div class="save-notice">No valid data found to insert.</div>
-    <?php } else { ?>
-    <div class="save-notice">Clinic is set to 0. Please update each campaign's clinic manually.</div>
+    <?php } elseif ($clinic_manual_needed) { ?>
+    <div class="save-notice">Some campaigns have no Event Location set. Please update each campaign's clinic manually.</div>
     <?php } ?>
     <div style="display:flex;align-items:center;gap:10px;margin-top:16px;">
         <a href="vaccine_campaign_import.php" class="upd-submit">Import Again</a>
@@ -354,7 +375,7 @@ a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color
             <tr>
                 <th></th>
                 <td>
-                    <div style="color:#6b7280 !important;font-size:12px !important;margin-bottom:8px !important;">Clinic will be set to 0. Update each campaign's clinic manually after import.</div>
+                    <div style="color:#6b7280 !important;font-size:12px !important;margin-bottom:8px !important;">Event Location is auto-set only if "Carepro Mobile Clinic" is marked Yes. Otherwise, update each campaign's clinic manually after import.</div>
                     <div style="display:flex;align-items:center;gap:10px;">
                         <button type="submit" name="submit" id="submit" class="upd-submit">Import</button>
                         <a href="vaccine_calendar.php" class="upd-back">Go to Calendar</a>
