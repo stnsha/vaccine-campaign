@@ -14,10 +14,10 @@ $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : 'form';
 $date_from = '2026-08-11';
 $date_to   = '2026-12-31';
 
-// Finds outlet+date groups with more than one campaign row in the given range,
-// then classifies each group: soft-delete (recycle=1) the HQ initiated (type=1)
-// row(s) in that group, but only when no customer is already booked for that
-// outlet+date. Non-HQ rows in the group are always kept.
+// Finds every outlet+date combination in the given range, then classifies
+// each one: soft-delete (recycle=1) all HQ initiated (type=1) rows for that
+// outlet+date, but only when no customer is already booked. Non-HQ rows are
+// always kept. Applies to all matching rows, not just duplicates.
 function vc_dedupe_find_groups($conn, $date_from, $date_to) {
     $groups = array();
 
@@ -25,8 +25,7 @@ function vc_dedupe_find_groups($conn, $date_from, $date_to) {
                   FROM vaccine_campaign
                   WHERE v_date BETWEEN '$date_from' AND '$date_to'
                     AND recycle = 0
-                  GROUP BY outlets, v_date
-                  HAVING COUNT(*) > 1";
+                  GROUP BY outlets, v_date";
     $dup_result = mysqli_query($conn, $dup_query);
     if (!$dup_result) {
         return $groups;
@@ -334,15 +333,15 @@ a.upd-back:hover {
 }
 </style>
 <div class="idx-panel">
-    <h3 style="margin-top:0 !important;">Remove Duplicate Campaigns (August &ndash; December 2026)</h3>
-    <p>A duplicate is two or more campaign rows with the <b>same outlet</b> and the <b>same exact date</b>. This tool
-        soft-deletes (recycle) rows when:</p>
+    <h3 style="margin-top:0 !important;">Remove HQ Initiated Campaigns (August &ndash; December 2026)</h3>
+    <p>This tool soft-deletes (recycle) campaign rows when:</p>
     <ul>
         <li>The row's campaign <b>type is HQ initiated</b>, and</li>
-        <li>The outlet+date group has <b>0 customers</b> already booked.</li>
+        <li>The row's outlet+date has <b>0 customers</b> already booked.</li>
     </ul>
-    <p>Only the HQ initiated row(s) in a qualifying group are removed; non-HQ rows are always kept. Groups with any
-        customer already booked, or with no HQ initiated row, are left untouched and flagged for manual review.</p>
+    <p>Applies to every matching outlet+date in range, not just duplicates. Non-HQ rows are always kept. Outlet+dates
+        with any customer already booked, or with no HQ initiated row, are left untouched and flagged for manual
+        review.</p>
 
     <form method="get" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="margin-bottom:10px;">
         <input type="hidden" name="action" value="preview" />
@@ -354,7 +353,7 @@ a.upd-back:hover {
     <?php if ($exec_error != '') { ?>
     <div class="save-error"><?php echo htmlspecialchars($exec_error); ?></div>
     <?php } else { ?>
-    <div class="save-count"><?php echo $deleted_count; ?> HQ initiated duplicate campaign row(s) removed for
+    <div class="save-count"><?php echo $deleted_count; ?> HQ initiated campaign row(s) removed for
         Aug&ndash;Dec 2026.</div>
     <?php } ?>
     <?php } ?>
@@ -363,7 +362,7 @@ a.upd-back:hover {
     <p>Range checked: <b><?php echo $date_from; ?></b> to <b><?php echo $date_to; ?></b></p>
 
     <?php if (empty($groups)) { ?>
-    <div class="save-notice">No duplicate outlet+date groups found in this range.</div>
+    <div class="save-notice">No outlet+date entries found in this range.</div>
     <?php } else { ?>
     <table class="dd-table">
         <tr>
@@ -411,18 +410,18 @@ a.upd-back:hover {
 
     <?php if ($delete_total > 0 && !$executed) { ?>
     <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>"
-        onsubmit="return confirm('Remove <?php echo $delete_total; ?> HQ initiated duplicate campaign row(s)?');">
+        onsubmit="return confirm('Remove <?php echo $delete_total; ?> HQ initiated campaign row(s)?');">
         <input type="hidden" name="action" value="execute" />
         <div class="save-notice">This will soft-delete (recycle) <?php echo $delete_total; ?> row(s) marked "Delete"
             above.</div>
         <label><input type="checkbox" name="confirm" value="1" required /> I have reviewed the rows above and confirm
             this deletion.</label>
         <div style="margin-top:10px;">
-            <button type="submit" class="upd-danger">Confirm &amp; Delete Duplicates</button>
+            <button type="submit" class="upd-danger">Confirm &amp; Delete</button>
         </div>
     </form>
     <?php } elseif ($delete_total == 0 && !empty($groups)) { ?>
-    <div class="save-notice">No rows are eligible for automatic deletion. All groups above need manual review.</div>
+    <div class="save-notice">No rows are eligible for automatic deletion. All entries above need manual review.</div>
     <?php } ?>
 
     <?php } ?>
