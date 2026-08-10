@@ -111,7 +111,7 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
             continue;
         }
 
-        $chk = mysqli_query($conn, "SELECT id FROM vaccine_campaign WHERE v_date='$date_esc' AND outlets='$outlet_id' LIMIT 1");
+        $chk = mysqli_query($conn, "SELECT id FROM vaccine_campaign WHERE v_date='$date_esc' AND outlets='$outlet_id' AND recycle=0 LIMIT 1");
         if ($chk && mysqli_fetch_assoc($chk)) {
             $errors[] = "Row $row: Campaign for outlet $code on $date already exists — skipped.";
             continue;

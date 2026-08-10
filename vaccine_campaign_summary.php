@@ -32,7 +32,7 @@ if($date_to < $date_from) {
 $filter_type   = isset($_GET['filter_type'])   ? trim(mysqli_real_escape_string($conn, $_GET['filter_type']))   : '';
 $filter_outlet = isset($_GET['filter_outlet']) ? trim(mysqli_real_escape_string($conn, $_GET['filter_outlet'])) : '';
 
-$where = array("vc.v_date BETWEEN '$date_from' AND '$date_to'", "vc.status != '2'");
+$where = array("vc.v_date BETWEEN '$date_from' AND '$date_to'", "vc.status != '2'", "vc.recycle = 0");
 
 if($filter_type != '') {
     $where[] = "vc.type='" . $filter_type . "'";

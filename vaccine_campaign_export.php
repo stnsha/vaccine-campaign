@@ -27,7 +27,7 @@ if($date_to < $date_from) {
     $date_to = $date_from;
 }
 
-$where = array("vc.v_date BETWEEN '$date_from' AND '$date_to'", "vc.status != '2'");
+$where = array("vc.v_date BETWEEN '$date_from' AND '$date_to'", "vc.status != '2'", "vc.recycle = 0");
 if($filter_type != '') {
     $where[] = "vc.type='" . $filter_type . "'";
 }

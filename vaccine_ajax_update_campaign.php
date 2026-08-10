@@ -10,7 +10,7 @@ $action      = trim(mysqli_real_escape_string($conn, $_POST['action'] ?? ''));
 $campaign_id = trim(mysqli_real_escape_string($conn, $_POST['campaign_id'] ?? ''));
 
 // Load campaign for permission check
-$q = "SELECT type, outlets, status FROM vaccine_campaign WHERE id='$campaign_id'";
+$q = "SELECT type, outlets, status FROM vaccine_campaign WHERE id='$campaign_id' AND recycle=0";
 $r = mysqli_query($conn, $q);
 if(!$r || !($c = $r->fetch_assoc())) {
     echo json_encode(array('success'=>false, 'message'=>'Campaign not found.'));
@@ -47,7 +47,7 @@ if($action == 'update_status') {
         exit;
     }
 
-    $q2 = "UPDATE vaccine_campaign SET `status`='$new_status' WHERE id='$campaign_id'";
+    $q2 = "UPDATE vaccine_campaign SET `status`='$new_status' WHERE id='$campaign_id' AND recycle=0";
     if(mysqli_query($conn, $q2)) {
         echo json_encode(array('success'=>true));
     } else {
@@ -71,7 +71,7 @@ if($action == 'update_status') {
     // HQ campaigns revert to 0 (re-acknowledgement required); outlet campaigns to 1
     $revert_to = ($camp_type == '1') ? '0' : '1';
 
-    $q3 = "UPDATE vaccine_campaign SET `status`='$revert_to' WHERE id='$campaign_id'";
+    $q3 = "UPDATE vaccine_campaign SET `status`='$revert_to' WHERE id='$campaign_id' AND recycle=0";
     if(mysqli_query($conn, $q3)) {
         echo json_encode(array('success'=>true));
     } else {

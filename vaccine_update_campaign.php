@@ -94,13 +94,13 @@ if (isset($_POST['submit'])) {
     $outlets     = trim(mysqli_real_escape_string($conn, $_POST['outlets'] ?? ''));
     $clinic      = trim(mysqli_real_escape_string($conn, $_POST['clinic'] ?? ''));
 
-    $sql2    = "SELECT `id` FROM `vaccine_campaign` WHERE `v_date`='$v_date' AND `outlets`='$outlets' AND `id`!='$campaign_id'";
+    $sql2    = "SELECT `id` FROM `vaccine_campaign` WHERE `v_date`='$v_date' AND `outlets`='$outlets' AND `id`!='$campaign_id' AND `recycle`=0";
     $result2 = mysqli_query($conn, $sql2);
     $row2    = $result2 ? $result2->fetch_assoc() : null;
     $dup_id  = $row2 ? $row2['id'] : null;
 
     if (!$dup_id) {
-        $query  = "UPDATE `vaccine_campaign` SET `v_date`='$v_date', `outlets`='$outlets', `clinic`='$clinic' WHERE `id`='$campaign_id'";
+        $query  = "UPDATE `vaccine_campaign` SET `v_date`='$v_date', `outlets`='$outlets', `clinic`='$clinic' WHERE `id`='$campaign_id' AND `recycle`=0";
         $result = mysqli_query($conn, $query);
         if ($result) {
             header("location: vaccine_campaign.php?id=$campaign_id&updated=1");
@@ -123,7 +123,7 @@ if (isset($_POST['submit'])) {
 }
 
 $campaign_id = trim(mysqli_real_escape_string($conn, $_GET['id'] ?? ''));
-$query       = "SELECT * FROM `vaccine_campaign` WHERE `id`='$campaign_id'";
+$query       = "SELECT * FROM `vaccine_campaign` WHERE `id`='$campaign_id' AND `recycle`=0";
 $result      = mysqli_query($conn, $query);
 $row         = $result ? $result->fetch_assoc() : null;
 

@@ -313,6 +313,7 @@ $query = "SELECT vc.id,
           LEFT JOIN vaccine_trans vt ON vt.outlet_id = vc.outlets AND vt.v_date >= vc.v_date AND vt.v_date < vc.v_date + INTERVAL 1 DAY AND vt.recycle = 0
           WHERE vc.v_date >= '$year-$month-01'
             AND vc.v_date < DATE_ADD('$year-$month-01', INTERVAL 1 MONTH)
+            AND vc.recycle = 0
             $option
           GROUP BY vc.id, vc.v_date, vc.outlets, vc.type, vc.status, o.code, vcl.name, vcl.dr_name
           ORDER BY vc.v_date";

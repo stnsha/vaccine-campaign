@@ -198,7 +198,7 @@ if ($fileSize > 0) {
 							if(isset($campaign_cache[$cache_key])){
 								$campaign_id = $campaign_cache[$cache_key];
 							} else {
-								$camp_q = "SELECT id FROM vaccine_campaign WHERE outlets='$outlet_id' AND v_date='$date_only' LIMIT 1";
+								$camp_q = "SELECT id FROM vaccine_campaign WHERE outlets='$outlet_id' AND v_date='$date_only' AND recycle=0 LIMIT 1";
 								$camp_r = mysqli_query($conn, $camp_q);
 								$camp_row = $camp_r ? mysqli_fetch_assoc($camp_r) : null;
 								if($camp_row){

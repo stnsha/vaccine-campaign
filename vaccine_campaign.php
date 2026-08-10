@@ -173,7 +173,7 @@ $query  = "SELECT vc.id, vc.v_date, vc.outlets AS outlet_id, vc.type, vc.status,
            FROM vaccine_campaign vc
            LEFT JOIN outlet o ON vc.outlets = o.id
            LEFT JOIN gp_clinics vcl ON vc.clinic = vcl.id
-           WHERE vc.id='$campaign_id'";
+           WHERE vc.id='$campaign_id' AND vc.recycle = 0";
 $result = mysqli_query($conn, $query);
 
 if (!$result) { ?>

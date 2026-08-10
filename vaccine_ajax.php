@@ -69,7 +69,7 @@ echo "<img src='../common/img/tick.png' title='Ok'>|$phone_parts[0]|$ic|$custome
 if(isset($_GET['campaigns'])){
 	$camps_outlet = trim(mysqli_real_escape_string($conn, $_GET['campaigns']));
 	$camps_sel    = (int)(isset($_GET['selected']) ? $_GET['selected'] : 0);
-	$q = "SELECT vc.id, vc.v_date, gc.name, gc.dr_name FROM vaccine_campaign vc LEFT JOIN gp_clinics gc ON vc.clinic=gc.id WHERE vc.outlets='$camps_outlet' AND vc.status != '2' AND vc.v_date >= CURDATE() ORDER BY vc.v_date ASC";
+	$q = "SELECT vc.id, vc.v_date, gc.name, gc.dr_name FROM vaccine_campaign vc LEFT JOIN gp_clinics gc ON vc.clinic=gc.id WHERE vc.outlets='$camps_outlet' AND vc.status != '2' AND vc.v_date >= CURDATE() AND vc.recycle = 0 ORDER BY vc.v_date ASC";
 	$r = mysqli_query($conn, $q);
 	$html = "<select id='campaign_id' name='campaign_id' onchange='onCampaignChange(this)'>";
 	$html .= "<option value='' data-date=''>-- No Campaign --</option>";
@@ -88,7 +88,7 @@ if(isset($_GET['campaigns'])){
 //search for campaign and clinic
 $outlet_id=trim(mysqli_real_escape_string($conn,$_GET['id'] ?? ''));
 if($outlet_id){
-	$query = "SELECT `vaccine_campaign`.`id`, `v_date`, `gp_clinics`.`name`, `dr_name` FROM `vaccine_campaign` left join `gp_clinics` on `vaccine_campaign`.`clinic`=`gp_clinics`.`id` where v_date >= '".date('Y-m-d')."' and `outlets`='$outlet_id' order by `v_date`";
+	$query = "SELECT `vaccine_campaign`.`id`, `v_date`, `gp_clinics`.`name`, `dr_name` FROM `vaccine_campaign` left join `gp_clinics` on `vaccine_campaign`.`clinic`=`gp_clinics`.`id` where v_date >= '".date('Y-m-d')."' and `outlets`='$outlet_id' and `vaccine_campaign`.`recycle`=0 order by `v_date`";
 	$result = mysqli_query($conn,$query) or die(mysqli_error($conn));
 	$num=mysqli_num_rows($result);
 	if($num==1){$v='selected';} else {$v='';}

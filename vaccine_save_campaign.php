@@ -33,7 +33,7 @@ $last_id = 0;
 $total=count($outlet);
 for ($i = 0; $i < $total; $i++) {
 	//prevent double entry
-	$query2="SELECT id from `vaccine_campaign` where `v_date`='$v_date' and `outlets`='$outlet[$i]'";
+	$query2="SELECT id from `vaccine_campaign` where `v_date`='$v_date' and `outlets`='$outlet[$i]' and `recycle`=0";
 	$result2=mysqli_query($conn,$query2);
 	$row2 = $result2 ? $result2 -> fetch_assoc() : null;
 	$existing_id = $row2 ? stripslashes($row2['id'] ?? '') : '';

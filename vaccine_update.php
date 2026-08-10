@@ -117,7 +117,7 @@ if(isset($_POST['submit'])){
 	$campaign_id = (int)trim(mysqli_real_escape_string($conn, $_POST['campaign_id'] ?? ''));
 	$clinic_id = 0;
 	if($campaign_id > 0){
-		$q_cl = "SELECT clinic FROM vaccine_campaign WHERE id='$campaign_id' LIMIT 1";
+		$q_cl = "SELECT clinic FROM vaccine_campaign WHERE id='$campaign_id' AND recycle=0 LIMIT 1";
 		$r_cl = mysqli_query($conn, $q_cl);
 		$row_cl = $r_cl ? mysqli_fetch_assoc($r_cl) : null;
 		if($row_cl){ $clinic_id = (int)($row_cl['clinic'] ?? 0); }
@@ -493,7 +493,7 @@ function getXMLHTTP() {
 				<td colspan='3'>
 					<span id="camp_container">
 					<?php
-					$q_camps = "SELECT vc.id, vc.v_date, gc.name, gc.dr_name FROM vaccine_campaign vc LEFT JOIN gp_clinics gc ON vc.clinic=gc.id WHERE vc.outlets='$outlet_id' AND (vc.status != '2' OR vc.id='$linked_campaign_id') AND (vc.v_date >= CURDATE() OR vc.id='$linked_campaign_id') ORDER BY vc.v_date ASC";
+					$q_camps = "SELECT vc.id, vc.v_date, gc.name, gc.dr_name FROM vaccine_campaign vc LEFT JOIN gp_clinics gc ON vc.clinic=gc.id WHERE vc.outlets='$outlet_id' AND (vc.status != '2' OR vc.id='$linked_campaign_id') AND (vc.v_date >= CURDATE() OR vc.id='$linked_campaign_id') AND (vc.recycle = 0 OR vc.id='$linked_campaign_id') ORDER BY vc.v_date ASC";
 					$r_camps = mysqli_query($conn, $q_camps);
 					echo "<select id='campaign_id' name='campaign_id' onchange='onCampaignChange(this)'>";
 					echo "<option value='' data-date=''>-- No Campaign --</option>";

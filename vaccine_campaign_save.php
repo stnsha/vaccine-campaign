@@ -20,7 +20,7 @@ if (!$outlet_id || !$v_date || $clinic_id == 0) {
 }
 
 // Check if campaign already exists
-$chk = mysqli_query($conn, "SELECT id FROM vaccine_campaign WHERE outlets='$outlet_id' AND v_date='$v_date' LIMIT 1");
+$chk = mysqli_query($conn, "SELECT id FROM vaccine_campaign WHERE outlets='$outlet_id' AND v_date='$v_date' AND recycle=0 LIMIT 1");
 if ($chk && mysqli_num_rows($chk) > 0) {
     $row = mysqli_fetch_assoc($chk);
     echo json_encode(array('success' => true, 'id' => $row['id']));

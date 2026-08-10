@@ -47,7 +47,7 @@ See `vaccine_campaign_add_recycle.sql`.
 
 All vaccine\_ prefixed files write to `vaccine_trans`. Ensure this table exists and mirrors the structure of the original `vaccine_trans` table.
 
-> **Note:** The `vaccine_campaign` table has a `recycle` column (see step 4 below), used for soft-deleting duplicate HQ initiated campaign rows in `vaccine_campaign_dedupe.php`. Other vaccine_campaign queries in this module do not filter on it and should keep working as-is unless intentionally updated.
+> **Note:** The `vaccine_campaign` table has a `recycle` column (see step 4 below), used for soft-deleting HQ initiated campaign rows in `vaccine_campaign_dedupe.php`. Every `vaccine_campaign` query across this module (display, edit, duplicate checks, campaign lookups) filters `recycle=0` so recycled rows are excluded from view and updates.
 
 ---
 

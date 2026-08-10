@@ -20,7 +20,7 @@ if ($clinic_id > 0) {
     $q = "SELECT vc.id, vc.v_date, vcl.id as clinic_id, vcl.name, vcl.dr_name
           FROM vaccine_campaign vc
           LEFT JOIN gp_clinics vcl ON vc.clinic = vcl.id
-          WHERE vc.outlets='$outlet_id' AND vc.v_date='$v_date' AND vc.clinic='$clinic_id'
+          WHERE vc.outlets='$outlet_id' AND vc.v_date='$v_date' AND vc.clinic='$clinic_id' AND vc.recycle=0
           LIMIT 1";
     $r   = mysqli_query($conn, $q);
     $row = $r ? mysqli_fetch_assoc($r) : null;
@@ -41,7 +41,7 @@ if ($clinic_id > 0) {
     $q    = "SELECT vc.id, vc.v_date, vcl.id as clinic_id, vcl.name, vcl.dr_name
              FROM vaccine_campaign vc
              LEFT JOIN gp_clinics vcl ON vc.clinic = vcl.id
-             WHERE vc.outlets='$outlet_id' AND vc.v_date='$v_date'";
+             WHERE vc.outlets='$outlet_id' AND vc.v_date='$v_date' AND vc.recycle=0";
     $r    = mysqli_query($conn, $q);
     $rows = array();
     if ($r) { while ($row = mysqli_fetch_assoc($r)) { $rows[] = $row; } }

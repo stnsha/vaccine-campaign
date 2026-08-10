@@ -66,7 +66,7 @@ foreach ($rows as $idx => $row) {
     }
 
     // Get or create campaign for this outlet+date
-    $camp_chk = "SELECT id FROM vaccine_campaign WHERE outlets='$outlet_id' AND v_date='$v_date' LIMIT 1";
+    $camp_chk = "SELECT id FROM vaccine_campaign WHERE outlets='$outlet_id' AND v_date='$v_date' AND recycle=0 LIMIT 1";
     $camp_r   = mysqli_query($conn, $camp_chk);
     $camp_row = $camp_r ? mysqli_fetch_assoc($camp_r) : null;
     if ($camp_row) {
