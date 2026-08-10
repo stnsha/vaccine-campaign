@@ -14,38 +14,50 @@ $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : 'form';
 $date_from = '2026-08-11';
 $date_to   = '2026-12-31';
 
-// Finds every outlet+date combination in the given range, then classifies
-// each one: soft-delete (recycle=1) all HQ initiated (type=1) rows for that
-// outlet+date, but only when no customer is already booked. Non-HQ rows are
-// always kept. Applies to all matching rows, not just duplicates.
+// Finds every outlet+date combination in the given range that has at least
+// one HQ initiated (type=1) campaign row, then classifies each one:
+// soft-delete (recycle=1) all HQ initiated rows for that outlet+date, but
+// only when no customer is already booked. Non-HQ rows are always kept.
+// Applies to all matching rows, not just duplicates. Uses bulk queries
+// (not one query per outlet+date) to stay fast over large date ranges.
 function vc_dedupe_find_groups($conn, $date_from, $date_to) {
     $groups = array();
 
-    $dup_query = "SELECT outlets, v_date, COUNT(*) AS cnt
-                  FROM vaccine_campaign
-                  WHERE v_date BETWEEN '$date_from' AND '$date_to'
-                    AND recycle = 0
-                  GROUP BY outlets, v_date";
-    $dup_result = mysqli_query($conn, $dup_query);
-    if (!$dup_result) {
+    // All campaign rows in range, bucketed by outlet+date in PHP.
+    $rows_query = "SELECT id, outlets, v_date, status, type, clinic
+                   FROM vaccine_campaign
+                   WHERE v_date BETWEEN '$date_from' AND '$date_to'
+                     AND recycle = 0
+                   ORDER BY outlets, v_date, id";
+    $rows_result = mysqli_query($conn, $rows_query);
+    if (!$rows_result) {
         return $groups;
     }
-
-    while ($dup_row = $dup_result->fetch_assoc()) {
-        $outlet_id = $dup_row['outlets'];
-        $v_date    = $dup_row['v_date'];
-
-        $rows_query = "SELECT id, status, type, clinic
-                       FROM vaccine_campaign
-                       WHERE outlets='$outlet_id' AND v_date='$v_date' AND recycle = 0
-                       ORDER BY id";
-        $rows_result = mysqli_query($conn, $rows_query);
-        $rows = array();
-        if ($rows_result) {
-            while ($r = $rows_result->fetch_assoc()) {
-                $rows[] = $r;
-            }
+    $rows_by_key = array();
+    while ($r = $rows_result->fetch_assoc()) {
+        $key = $r['outlets'] . '|' . $r['v_date'];
+        if (!isset($rows_by_key[$key])) {
+            $rows_by_key[$key] = array();
         }
+        $rows_by_key[$key][] = $r;
+    }
+
+    // Booked customer counts per outlet+date, in one aggregate query.
+    $cust_query = "SELECT outlet_id, DATE(v_date) AS d, COUNT(*) AS cnt
+                   FROM vaccine_trans
+                   WHERE DATE(v_date) BETWEEN '$date_from' AND '$date_to'
+                     AND recycle = 0
+                   GROUP BY outlet_id, DATE(v_date)";
+    $cust_result = mysqli_query($conn, $cust_query);
+    $cust_by_key = array();
+    if ($cust_result) {
+        while ($c = $cust_result->fetch_assoc()) {
+            $cust_by_key[$c['outlet_id'] . '|' . $c['d']] = (int) $c['cnt'];
+        }
+    }
+
+    foreach ($rows_by_key as $key => $rows) {
+        list($outlet_id, $v_date) = explode('|', $key, 2);
 
         $hq_rows     = array();
         $non_hq_rows = array();
@@ -57,17 +69,11 @@ function vc_dedupe_find_groups($conn, $date_from, $date_to) {
             }
         }
 
-        $cust_query = "SELECT COUNT(*) AS cnt
-                       FROM vaccine_trans
-                       WHERE outlet_id = '$outlet_id'
-                         AND v_date >= '$v_date' AND v_date < '$v_date' + INTERVAL 1 DAY
-                         AND recycle = 0";
-        $cust_result = mysqli_query($conn, $cust_query);
-        $cust_count  = 0;
-        if ($cust_result) {
-            $cust_row   = $cust_result->fetch_assoc();
-            $cust_count = (int) $cust_row['cnt'];
+        if (count($hq_rows) == 0) {
+            continue;
         }
+
+        $cust_count = isset($cust_by_key[$key]) ? $cust_by_key[$key] : 0;
 
         if ($cust_count > 0) {
             $decision   = 'skip';
@@ -77,7 +83,7 @@ function vc_dedupe_find_groups($conn, $date_from, $date_to) {
             foreach ($rows as $r) {
                 $keep_ids[] = $r['id'];
             }
-        } elseif (count($hq_rows) > 0) {
+        } else {
             $decision   = 'delete';
             $reason     = 'HQ initiated campaign row(s) found with no customers booked; removing them.';
             $delete_ids = array();
@@ -86,14 +92,6 @@ function vc_dedupe_find_groups($conn, $date_from, $date_to) {
             }
             $keep_ids = array();
             foreach ($non_hq_rows as $r) {
-                $keep_ids[] = $r['id'];
-            }
-        } else {
-            $decision   = 'skip';
-            $reason     = 'No HQ initiated campaign row in this group — needs manual review.';
-            $delete_ids = array();
-            $keep_ids   = array();
-            foreach ($rows as $r) {
                 $keep_ids[] = $r['id'];
             }
         }
@@ -340,8 +338,8 @@ a.upd-back:hover {
         <li>The row's outlet+date has <b>0 customers</b> already booked.</li>
     </ul>
     <p>Applies to every matching outlet+date in range, not just duplicates. Non-HQ rows are always kept. Outlet+dates
-        with any customer already booked, or with no HQ initiated row, are left untouched and flagged for manual
-        review.</p>
+        with no HQ initiated row aren't listed below. Outlet+dates with any customer already booked are listed but
+        left untouched, flagged for manual review.</p>
 
     <form method="get" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="margin-bottom:10px;">
         <input type="hidden" name="action" value="preview" />
