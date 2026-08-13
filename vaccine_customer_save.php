@@ -54,8 +54,8 @@ $birth_day       = substr($ic, 4, 2);
 $birth_year_full = ($birth_year <= 30) ? "20$birth_year" : "19$birth_year";
 $birth_date      = "$birth_year_full-$birth_month-$birth_day";
 
-$query = "INSERT INTO customer (id, c_id, date, customer_name, ic, gender, birth_date, allergic, diagnosis, language, phone, email, c_addr, operator, race, nationality, recycle)
-          VALUES (NULL, '', NOW(), '$customer_name', '$ic', '$gender', '$birth_date', '', '', '$language', '$phone', '$email', '$c_addr', '$id_user', '$race', '$nationality', '0')";
+$query = "INSERT INTO customer (id, c_id, date, customer_name, ic, gender, birth_date, allergic, diagnosis, language, phone, email, c_addr, operator, race, nationality, recycle, contact_method)
+          VALUES (NULL, '', NOW(), '$customer_name', '$ic', '$gender', '$birth_date', '', '', '$language', '$phone', '$email', '$c_addr', '$id_user', '$race', '$nationality', '0', '1')";
 $result = mysqli_query($conn, $query);
 
 if (!$result) { json_err('Database error: ' . mysqli_error($conn)); }
