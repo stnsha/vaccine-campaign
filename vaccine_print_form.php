@@ -1,3 +1,107 @@
+<?php
+function odb_tick_box($pdf, $x0, $y0, $y1) {
+	$left   = $x0 - 11.5;
+	$right  = $x0 - 1.5;
+	$top    = $y0 - 1;
+	$bottom = $y1 - 1.5;
+	$pad = 2.2;
+	$pdf->Line($left + $pad, $top + $pad, $right - $pad, $bottom - $pad);
+	$pdf->Line($left + $pad, $bottom - $pad, $right - $pad, $top + $pad);
+}
+
+if (($_POST['print_type'] ?? '') === '2') {
+	require_once('vendor/autoload.php');
+	date_default_timezone_set('Asia/Kuala_Lumpur');
+	$connect = 1;
+	include('../common/index_adv.php');
+	ini_set('memory_limit', '128M');
+	ini_set('max_execution_time', 6000);
+
+	$bulk_print = isset($_POST['bulk_print']) ? $_POST['bulk_print'] : [];
+	$ids = array_filter(array_map('intval', $bulk_print));
+	if (empty($ids)) { echo 'No data found!'; exit; }
+	$per_print_list = implode(',', $ids);
+
+	$trans_query  = "SELECT `id`, `cust_id`, `item_code` FROM `vaccine_trans` WHERE `recycle`=0 AND `id` IN ($per_print_list)";
+	$trans_result = mysqli_query($conn, $trans_query);
+
+	$template_file = __DIR__ . '/consent_form.pdf';
+	$pdf = new \setasign\Fpdi\Fpdi('P', 'pt');
+	$pdf->SetAutoPageBreak(false);
+	$pdf->setSourceFile($template_file);
+
+	$has_patient = false;
+	while ($trans_result && ($row = $trans_result->fetch_assoc())) {
+		$has_patient = true;
+		$cust_id   = stripslashes($row['cust_id'] ?? '');
+		$item_code = stripslashes($row['item_code'] ?? '');
+
+		$cust_q = "SELECT `customer_name`, `ic`, `phone`, `birth_date`, `gender` FROM `customer` WHERE `id`='$cust_id' LIMIT 1";
+		$cust_r = mysqli_query($conn, $cust_q);
+		$cust   = $cust_r ? $cust_r->fetch_assoc() : null;
+		$customer_name = $cust ? stripslashes($cust['customer_name'] ?? '') : '';
+		$ic            = $cust ? stripslashes($cust['ic'] ?? '') : '';
+		$phone_raw     = $cust ? stripslashes($cust['phone'] ?? '') : '';
+		$birth_date    = $cust ? stripslashes($cust['birth_date'] ?? '') : '';
+		$gender        = $cust ? stripslashes($cust['gender'] ?? '') : '';
+
+		$phone_parts   = explode('@', $phone_raw);
+		$phone_display = trim($phone_parts[0]);
+		$dob_display   = (!empty($birth_date) && $birth_date !== '0000-00-00') ? date('d-m-Y', strtotime($birth_date)) : '';
+
+		$vt_q = "SELECT `vaccine_type`.`vaccine_name` FROM `vaccine_code` JOIN `vaccine_type` ON `vaccine_code`.`vaccine_type`=`vaccine_type`.`id` WHERE `vaccine_code`.`item_code`='$item_code' LIMIT 1";
+		$vt_r = mysqli_query($conn, $vt_q);
+		$vt   = $vt_r ? $vt_r->fetch_assoc() : null;
+		$vaccine_name    = $vt ? stripslashes($vt['vaccine_name'] ?? '') : '';
+		$vaccine_name_lc = strtolower($vaccine_name);
+
+		// Page 1: patient info overlaid onto the template
+		$tpl1  = $pdf->importPage(1);
+		$size1 = $pdf->getTemplateSize($tpl1);
+		$pdf->AddPage($size1['orientation'], [$size1['width'], $size1['height']]);
+		$pdf->useTemplate($tpl1);
+		$pdf->SetTextColor(0, 0, 0);
+		$pdf->SetFont('Arial', '', 10);
+		$pdf->Text(135, 141, $customer_name);
+		$pdf->Text(147, 167.5, $ic);
+		$pdf->Text(147, 263, $dob_display);
+		$pdf->Text(360, 263, $phone_display);
+
+		$pdf->SetLineWidth(1.2);
+		if (strpos($vaccine_name_lc, 'hepatitis') !== false) {
+			odb_tick_box($pdf, 169.1, 207.5, 219.8);
+		} elseif (strpos($vaccine_name_lc, 'influenza') !== false) {
+			odb_tick_box($pdf, 91.1, 207.5, 219.8);
+		} elseif (strpos($vaccine_name_lc, 'typhoid') !== false) {
+			odb_tick_box($pdf, 91.1, 228.9, 241.2);
+		} else {
+			odb_tick_box($pdf, 169.1, 228.9, 241.2);
+			if ($vaccine_name !== '') {
+				$pdf->SetFont('Arial', '', 9);
+				$pdf->Text(219, 239.2, $vaccine_name);
+			}
+		}
+
+		$gender_initial = strtoupper(substr(trim($gender), 0, 1));
+		if ($gender_initial === 'M') {
+			odb_tick_box($pdf, 385.1, 207.5, 219.8);
+		} elseif ($gender_initial === 'F') {
+			odb_tick_box($pdf, 445.9, 207.5, 219.8);
+		}
+
+		// Page 2: consent/signature page, carried over unchanged
+		$tpl2  = $pdf->importPage(2);
+		$size2 = $pdf->getTemplateSize($tpl2);
+		$pdf->AddPage($size2['orientation'], [$size2['width'], $size2['height']]);
+		$pdf->useTemplate($tpl2);
+	}
+
+	if (!$has_patient) { echo 'No data found!'; exit; }
+
+	$pdf->Output('I', 'consent_form.pdf');
+	exit;
+}
+?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <style>
 	@media print{

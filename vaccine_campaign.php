@@ -538,6 +538,7 @@ $status_color = array('0' => '#FF6600', '1' => '#008800', '2' => '#0000CC', '3' 
         <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;">
             <select name="print_type" style="border-radius:8px !important;padding:5px 8px !important;border:1px solid #cfcfcf !important;font-size:13px !important;font-family:Arial,Helvetica,sans-serif !important;height:32px !important;box-sizing:border-box !important;">
                 <option value="1">Referral Letter</option>
+                <option value="2">Consent Form</option>
             </select>
             <input type="hidden" name="staff" value="<?php echo $nama_staff; ?>" />
             <input type="hidden" name="position" value="<?php echo $status_semasa; ?>" />
