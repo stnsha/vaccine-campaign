@@ -42,6 +42,53 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
     ini_set('memory_limit', '2000M');
     ini_set('max_execution_time', 30000);
 
+    // Stream progress updates to the browser while the import runs.
+    if (function_exists('apache_setenv')) {
+        @apache_setenv('no-gzip', '1');
+    }
+    @ini_set('zlib.output_compression', '0');
+    while (ob_get_level() > 0) {
+        ob_end_flush();
+    }
+    ob_implicit_flush(true);
+?>
+<style type="text/css">
+.imp-progress{background:#fff;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.08);padding:18px 22px;margin:10px 0;font-family:Arial,Helvetica,sans-serif !important;text-align:left !important;}
+.imp-progress-label{font-size:13px !important;color:#111 !important;margin-bottom:8px !important;display:flex !important;justify-content:space-between !important;}
+.imp-progress-track{background:#e9ecef;border-radius:8px;height:18px;overflow:hidden;}
+.imp-progress-fill{background:#005B96;height:100%;width:0;transition:width .2s ease;}
+</style>
+<div class="imp-progress" id="impProgress">
+    <div class="imp-progress-label"><span id="impProgressText">Loading file...</span><span id="impProgressPct">0%</span></div>
+    <div class="imp-progress-track"><div class="imp-progress-fill" id="impProgressFill"></div></div>
+</div>
+<script type="text/javascript">
+function impProgress(pct, text) {
+    document.getElementById('impProgressFill').style.width = pct + '%';
+    document.getElementById('impProgressPct').textContent = pct + '%';
+    document.getElementById('impProgressText').textContent = text;
+}
+function impProgressDone() {
+    document.getElementById('impProgress').style.display = 'none';
+}
+</script>
+<?php
+    // Padding pushes the initial chunk past browser render buffers.
+    echo '<!--' . str_repeat(' ', 4096) . '-->';
+    flush();
+
+    $last_pct = -1;
+    $emit_progress = function (int $pct, string $text) use (&$last_pct): void {
+        if ($pct === $last_pct) {
+            return;
+        }
+        $last_pct = $pct;
+        echo '<script type="text/javascript">impProgress(' . $pct . ', ' . json_encode($text) . ');</script>' . "\n";
+        flush();
+    };
+
+    $emit_progress(2, 'Loading file...');
+
     try {
         $inputFileType = IOFactory::identify($tmpName);
         $objReader     = IOFactory::createReader($inputFileType);
@@ -57,9 +104,18 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
     $errors  = array();
     $inserts = array();
     $seen    = array();
+    $updates   = [];
+    $unchanged = 0;
     $today   = date('Y-m-d');
 
+    // Validation covers 5-60%, database writes cover 60-100%.
+    $total_rows = max(1, $highestRow - 2);
+    $emit_progress(5, 'Validating rows...');
+
     for ($row = 3; $row <= $highestRow; $row++) {
+        $done = $row - 2;
+        $emit_progress(5 + (int) floor($done / $total_rows * 55), "Validating row $done of $total_rows...");
+
         $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
 
         $date = trim((string) $rowData[0][0]);
@@ -111,12 +167,6 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
             continue;
         }
 
-        $chk = mysqli_query($conn, "SELECT id FROM vaccine_campaign WHERE v_date='$date_esc' AND outlets='$outlet_id' AND recycle=0 LIMIT 1");
-        if ($chk && mysqli_fetch_assoc($chk)) {
-            $errors[] = "Row $row: Campaign for outlet $code on $date already exists — skipped.";
-            continue;
-        }
-
         // Acknowledge = Yes -> Outlet Initiated (type 2), auto-acknowledged (status 1, no pending ack).
         // Acknowledge blank -> HQ Initiated (type 1), status 0 (pending outlet ack).
         $type            = $is_ack ? '2' : '1';
@@ -125,6 +175,48 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
         $clinic_id = $is_carepro ? 722 : 0;
 
         $seen[$dup_key] = true;
+
+        $chk = mysqli_query($conn, "SELECT id, type, status, clinic FROM vaccine_campaign WHERE v_date='$date_esc' AND outlets='$outlet_id' AND recycle=0 ORDER BY id ASC LIMIT 1");
+        $existing = $chk ? mysqli_fetch_assoc($chk) : null;
+        if ($existing) {
+            $ex_type   = (string) $existing['type'];
+            $ex_status = (string) $existing['status'];
+            $ex_clinic = (int) $existing['clinic'];
+
+            // Cancelled campaigns (status 2) must be reverted from the campaign page, not by import.
+            if ($ex_status === '2') {
+                $errors[] = "Row $row: Campaign for outlet $code on $date is cancelled — not updated.";
+                continue;
+            }
+
+            // Status only follows a type change; same type keeps current status so an
+            // outlet acknowledgement on an HQ campaign is not reset back to pending.
+            $new_status = ($ex_type !== $type) ? $initial_status : $ex_status;
+
+            // Carepro = Yes forces clinic 722. Carepro blank only clears clinic when it is
+            // currently 722; a manually assigned clinic is preserved.
+            if ($is_carepro) {
+                $new_clinic = 722;
+            } elseif ($ex_clinic === 722) {
+                $new_clinic = 0;
+            } else {
+                $new_clinic = $ex_clinic;
+            }
+
+            if ($ex_type === $type && $ex_status === $new_status && $ex_clinic === $new_clinic) {
+                $unchanged++;
+                continue;
+            }
+
+            $updates[] = [
+                'id'     => (int) $existing['id'],
+                'type'   => $type,
+                'status' => $new_status,
+                'clinic' => $new_clinic,
+            ];
+            continue;
+        }
+
         $inserts[] = array(
             'date'      => $date_esc,
             'outlet_id' => $outlet_id,
@@ -137,7 +229,15 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
     $inserted = 0;
     $failed   = 0;
     $clinic_manual_needed = false;
+    // Once saving starts, finish all writes even if the browser disconnects,
+    // so the import is never left half-applied.
+    ignore_user_abort(true);
+    $total_writes = max(1, count($inserts) + count($updates));
+    $written      = 0;
+    $emit_progress(60, 'Saving campaigns...');
     foreach ($inserts as $row_data) {
+        $written++;
+        $emit_progress(60 + (int) floor($written / $total_writes * 40), "Saving campaign $written of $total_writes...");
         if ($row_data['clinic'] == 0) {
             $clinic_manual_needed = true;
         }
@@ -148,6 +248,25 @@ a.upd-back,.upd-back{display:inline-flex !important;align-items:center !importan
             $failed++;
         }
     }
+
+    $updated       = 0;
+    $update_failed = 0;
+    foreach ($updates as $upd) {
+        $written++;
+        $emit_progress(60 + (int) floor($written / $total_writes * 40), "Saving campaign $written of $total_writes...");
+        if ($upd['clinic'] == 0) {
+            $clinic_manual_needed = true;
+        }
+        $sql = "UPDATE vaccine_campaign SET clinic='" . $upd['clinic'] . "', type='" . $upd['type'] . "', status='" . $upd['status'] . "' WHERE id='" . $upd['id'] . "' AND recycle=0";
+        if (mysqli_query($conn, $sql)) {
+            $updated++;
+        } else {
+            $update_failed++;
+        }
+    }
+
+    $emit_progress(100, 'Completed.');
+    echo '<script type="text/javascript">impProgressDone();</script>' . "\n";
 ?>
 <style type="text/css">
 .idx-panel {
@@ -226,10 +345,15 @@ a.upd-back, .upd-back {
 a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color: #b0b8c1 !important; }
 </style>
 <div class="idx-panel">
-    <div class="save-count"><?php echo $inserted; ?> campaign(s) imported successfully.</div>
+    <div class="save-count"><?php echo $inserted; ?> campaign(s) imported, <?php echo $updated; ?> updated, <?php echo $unchanged; ?> unchanged.</div>
     <?php if ($failed > 0) { ?>
     <div class="save-errors">
         <p><?php echo $failed; ?> row(s) failed to insert.</p>
+    </div>
+    <?php } ?>
+    <?php if ($update_failed > 0) { ?>
+    <div class="save-errors">
+        <p><?php echo $update_failed; ?> row(s) failed to update.</p>
     </div>
     <?php } ?>
     <?php if (!empty($errors)) { ?>
@@ -240,8 +364,8 @@ a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color
         </ul>
     </div>
     <?php } ?>
-    <?php if (empty($inserts)) { ?>
-    <div class="save-notice">No valid data found to insert.</div>
+    <?php if (empty($inserts) && empty($updates) && $unchanged === 0) { ?>
+    <div class="save-notice">No valid data found to import.</div>
     <?php } elseif ($clinic_manual_needed) { ?>
     <div class="save-notice">Some campaigns have no Event Location set. Please update each campaign's clinic manually.</div>
     <?php } ?>
@@ -355,7 +479,7 @@ a.upd-back, .upd-back {
 a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color: #b0b8c1 !important; }
 </style>
 <div class="idx-panel">
-    <form method="post" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+    <form method="post" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF']; ?>" onsubmit="impUploadStart();">
         <table class="myTable">
             <tr>
                 <th>Excel File (.xlsx) <span style="color:red;">*</span></th>
@@ -378,13 +502,37 @@ a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color
                     <div style="color:#6b7280 !important;font-size:12px !important;margin-bottom:8px !important;">Event Location is auto-set only if "Carepro Mobile Clinic" is marked Yes. Otherwise, update each campaign's clinic manually after import.</div>
                     <div style="display:flex;align-items:center;gap:10px;">
                         <button type="submit" name="submit" id="submit" class="upd-submit">Import</button>
-                        <a href="vaccine_calendar.php" class="upd-back">Go to Calendar</a>
+                        <button type="button" id="impCancel" class="upd-back" style="display:none !important;cursor:pointer !important;" onclick="impUploadCancel();">Cancel</button>
+                        <a href="vaccine_calendar.php" class="upd-back" id="impCalendarLink">Go to Calendar</a>
                     </div>
+                    <div id="impCancelMsg" style="display:none;color:#92400e !important;font-size:12px !important;margin-top:8px !important;">Upload cancelled. No data was imported.</div>
                 </td>
             </tr>
         </table>
     </form>
 </div>
+<script type="text/javascript">
+function impUploadStart() {
+    var b = document.getElementById('submit');
+    b.textContent = 'Uploading...';
+    b.style.pointerEvents = 'none';
+    b.style.opacity = '.7';
+    document.getElementById('impCancel').style.setProperty('display', 'inline-flex', 'important');
+    document.getElementById('impCalendarLink').style.setProperty('display', 'none', 'important');
+    document.getElementById('impCancelMsg').style.display = 'none';
+}
+function impUploadCancel() {
+    // Aborts the pending form POST so the file never reaches the server.
+    window.stop();
+    var b = document.getElementById('submit');
+    b.textContent = 'Import';
+    b.style.pointerEvents = '';
+    b.style.opacity = '';
+    document.getElementById('impCancel').style.setProperty('display', 'none', 'important');
+    document.getElementById('impCalendarLink').style.removeProperty('display');
+    document.getElementById('impCancelMsg').style.display = 'block';
+}
+</script>
 <?php
     $connect = 0;
     include('../common/index_adv.php');
