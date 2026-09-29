@@ -4,6 +4,21 @@ require_once('vendor/autoload.php');
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 require_once('../lock_adv.php');
+// Release the session lock right after the login check. A long import would otherwise
+// block progress polling and every other page opened with the same session.
+session_write_close();
+
+// Progress polling endpoint: returns the snapshot written by a running import.
+if (isset($_GET['progress'])) {
+    header('Content-Type: application/json');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    $poll_token = preg_replace('/[^a-f0-9]/', '', (string) $_GET['progress']);
+    $poll_file  = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'vc_import_' . $poll_token . '.json';
+    $snapshot   = ($poll_token !== '' && is_file($poll_file)) ? @file_get_contents($poll_file) : false;
+    echo $snapshot !== false && $snapshot !== '' ? $snapshot : '{"pct":0,"text":"Waiting for server..."}';
+    exit;
+}
+
 $connect = 1;
 include('../common/index_adv.php');
 date_default_timezone_set('Asia/Kuala_Lumpur');
@@ -77,12 +92,20 @@ function impProgressDone() {
     echo '<!--' . str_repeat(' ', 4096) . '-->';
     flush();
 
+    // Progress is also written to a temp file so the upload page can poll it. Streaming
+    // alone is not reliable when the server or network holds back the response.
+    $imp_token     = preg_replace('/[^a-f0-9]/', '', (string) ($_POST['imp_token'] ?? ''));
+    $progress_file = $imp_token !== '' ? sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'vc_import_' . $imp_token . '.json' : null;
+
     $last_pct = -1;
-    $emit_progress = function (int $pct, string $text) use (&$last_pct): void {
+    $emit_progress = function (int $pct, string $text) use (&$last_pct, $progress_file): void {
         if ($pct === $last_pct) {
             return;
         }
         $last_pct = $pct;
+        if ($progress_file !== null) {
+            @file_put_contents($progress_file, json_encode(['pct' => $pct, 'text' => $text]), LOCK_EX);
+        }
         echo '<script type="text/javascript">impProgress(' . $pct . ', ' . json_encode($text) . ');</script>' . "\n";
         flush();
     };
@@ -266,6 +289,9 @@ function impProgressDone() {
     }
 
     $emit_progress(100, 'Completed.');
+    if ($progress_file !== null) {
+        @unlink($progress_file);
+    }
     echo '<script type="text/javascript">impProgressDone();</script>' . "\n";
 ?>
 <style type="text/css">
@@ -477,9 +503,13 @@ a.upd-back, .upd-back {
     line-height: 1 !important;
 }
 a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color: #b0b8c1 !important; }
+.imp-progress{margin-top:12px;font-family:Arial,Helvetica,sans-serif !important;text-align:left !important;}
+.imp-progress-label{font-size:13px !important;color:#111 !important;margin-bottom:8px !important;display:flex !important;justify-content:space-between !important;}
+.imp-progress-track{background:#e9ecef;border-radius:8px;height:18px;overflow:hidden;}
+.imp-progress-fill{background:#005B96;height:100%;width:0;transition:width .2s ease;}
 </style>
 <div class="idx-panel">
-    <form method="post" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF']; ?>" onsubmit="impUploadStart();">
+    <form method="post" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF']; ?>" id="impForm" onsubmit="return impUploadStart(this);">
         <table class="myTable">
             <tr>
                 <th>Excel File (.xlsx) <span style="color:red;">*</span></th>
@@ -506,13 +536,91 @@ a.upd-back:hover, .upd-back:hover { background: #d8dde3 !important; border-color
                         <a href="vaccine_calendar.php" class="upd-back" id="impCalendarLink">Go to Calendar</a>
                     </div>
                     <div id="impCancelMsg" style="display:none;color:#92400e !important;font-size:12px !important;margin-top:8px !important;">Upload cancelled. No data was imported.</div>
+                    <div id="impErrorMsg" style="display:none;color:#c53030 !important;font-size:12px !important;margin-top:8px !important;"></div>
+                    <div class="imp-progress" id="impProgress" style="display:none;">
+                        <div class="imp-progress-label"><span id="impProgressText">Uploading file...</span><span id="impProgressPct">0%</span></div>
+                        <div class="imp-progress-track"><div class="imp-progress-fill" id="impProgressFill"></div></div>
+                    </div>
                 </td>
             </tr>
         </table>
     </form>
 </div>
 <script type="text/javascript">
-function impUploadStart() {
+// The file is sent with XMLHttpRequest so the bar does not depend on the server
+// streaming its response: upload progress comes from the browser (0-10%), and
+// processing progress is polled from the server (10-100%).
+var impXhr = null;
+var impPollTimer = null;
+var impShownPct = 0;
+
+function impSetProgress(pct, text) {
+    // Never move the bar backwards; a late poll response may carry an older value.
+    if (pct < impShownPct) {
+        return;
+    }
+    impShownPct = pct;
+    document.getElementById('impProgressFill').style.width = pct + '%';
+    document.getElementById('impProgressPct').textContent = pct + '%';
+    document.getElementById('impProgressText').textContent = text;
+}
+
+function impNewToken() {
+    var bytes = new Uint8Array(16);
+    window.crypto.getRandomValues(bytes);
+    return Array.prototype.map.call(bytes, function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+}
+
+function impStopPolling() {
+    if (impPollTimer !== null) {
+        clearInterval(impPollTimer);
+        impPollTimer = null;
+    }
+}
+
+function impStartPolling(token) {
+    impPollTimer = setInterval(function () {
+        var p = new XMLHttpRequest();
+        p.open('GET', 'vaccine_campaign_import.php?progress=' + token + '&_=' + Date.now(), true);
+        p.onload = function () {
+            if (p.status !== 200) {
+                return;
+            }
+            try {
+                var data = JSON.parse(p.responseText);
+                if (data.pct > 0) {
+                    impSetProgress(10 + Math.floor(data.pct * 0.9), data.text);
+                }
+            } catch (e) {
+                // Snapshot was mid-write; the next poll picks it up.
+            }
+        };
+        p.send();
+    }, 700);
+}
+
+function impResetForm() {
+    impStopPolling();
+    impXhr = null;
+    var b = document.getElementById('submit');
+    b.textContent = 'Import';
+    b.style.pointerEvents = '';
+    b.style.opacity = '';
+    document.getElementById('impCancel').style.setProperty('display', 'none', 'important');
+    document.getElementById('impCalendarLink').style.removeProperty('display');
+    document.getElementById('impProgress').style.display = 'none';
+}
+
+function impUploadStart(form) {
+    if (!window.XMLHttpRequest || !window.FormData || !window.crypto) {
+        return true; // Old browser: fall back to a normal form post.
+    }
+
+    var token = impNewToken();
+    var fd = new FormData(form);
+    fd.append('submit', '1');
+    fd.append('imp_token', token);
+
     var b = document.getElementById('submit');
     b.textContent = 'Uploading...';
     b.style.pointerEvents = 'none';
@@ -520,16 +628,57 @@ function impUploadStart() {
     document.getElementById('impCancel').style.setProperty('display', 'inline-flex', 'important');
     document.getElementById('impCalendarLink').style.setProperty('display', 'none', 'important');
     document.getElementById('impCancelMsg').style.display = 'none';
+    document.getElementById('impErrorMsg').style.display = 'none';
+    document.getElementById('impProgress').style.display = 'block';
+    impShownPct = 0;
+    impSetProgress(0, 'Uploading file...');
+
+    impXhr = new XMLHttpRequest();
+    impXhr.open('POST', form.action, true);
+    impXhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+            impSetProgress(Math.floor(e.loaded / e.total * 10), 'Uploading file...');
+        }
+    };
+    impXhr.upload.onload = function () {
+        // File is on the server; processing cannot be cancelled from here on.
+        document.getElementById('impCancel').style.setProperty('display', 'none', 'important');
+        b.textContent = 'Processing...';
+        impSetProgress(10, 'Processing file...');
+        impStartPolling(token);
+    };
+    impXhr.onload = function () {
+        impStopPolling();
+        if (impXhr.status === 200) {
+            impSetProgress(100, 'Completed.');
+            // Show the result page returned by the import.
+            document.open();
+            document.write(impXhr.responseText);
+            document.close();
+        } else {
+            impResetForm();
+            var err = document.getElementById('impErrorMsg');
+            err.textContent = 'Import failed (HTTP ' + impXhr.status + '). Please try again.';
+            err.style.display = 'block';
+        }
+    };
+    impXhr.onerror = function () {
+        impResetForm();
+        var err = document.getElementById('impErrorMsg');
+        err.textContent = 'Connection lost during import. Check the calendar before importing again.';
+        err.style.display = 'block';
+    };
+    impXhr.send(fd);
+    return false;
 }
+
 function impUploadCancel() {
-    // Aborts the pending form POST so the file never reaches the server.
-    window.stop();
-    var b = document.getElementById('submit');
-    b.textContent = 'Import';
-    b.style.pointerEvents = '';
-    b.style.opacity = '';
-    document.getElementById('impCancel').style.setProperty('display', 'none', 'important');
-    document.getElementById('impCalendarLink').style.removeProperty('display');
+    // Only offered while the file is still uploading, so nothing reaches the import.
+    if (impXhr !== null) {
+        impXhr.onerror = null;
+        impXhr.abort();
+    }
+    impResetForm();
     document.getElementById('impCancelMsg').style.display = 'block';
 }
 </script>
