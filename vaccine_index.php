@@ -343,7 +343,7 @@ $option3='';
 $key='';
 $search_status='';
 $date_from=date('Y-m-01');
-$date_to=date('Y-m-d');
+$date_to=date('Y-m-t');
 if(isset($_REQUEST['s'])){
 $key = trim(mysqli_real_escape_string($conn, $_REQUEST['key'] ?? ''));
 $search_status = trim(mysqli_real_escape_string($conn, $_REQUEST['search_status'] ?? ''));
