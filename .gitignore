@@ -1,4 +1,3 @@
-vaccine_index.php
-vaccine_invoice.php
 vendor/
 backup/
+.env

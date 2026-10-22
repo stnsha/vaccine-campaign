@@ -1,0 +1,4 @@
+# .env holds the Xilnex API credentials and the Nexus signing secret.
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>

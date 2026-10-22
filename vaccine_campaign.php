@@ -652,7 +652,6 @@ function updateTransStatus(newStatus, transId) {
 }
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/jssha/dist/sha256.js"></script>
 <script>
 function openClinicLink(ic, name, phone, receiptNo, paymentChannel) {
     var errors = [];
@@ -663,24 +662,29 @@ function openClinicLink(ic, name, phone, receiptNo, paymentChannel) {
         alert("Please complete the following before proceeding:\n- " + errors.join("\n- "));
         return;
     }
-    receiptNo      = receiptNo ? receiptNo.trim() : "";
-    paymentChannel = paymentChannel ? paymentChannel.trim() : "";
-    var exp        = Math.floor(Date.now() / 30000);
-    var comments   = "Referral Case from Octopus Module";
-    var payload    = name + "|" + ic + "|" + phone + "|" + receiptNo + "|" + paymentChannel + "|" + comments + "|" + exp;
-    var secretKey  = "octopus2nexus integration";
-    var token      = generateSHA256(payload + secretKey);
-    var headerData = { NRIC: ic, PatientName: name, MobileNo: phone, ReceiptNo: receiptNo, PaymentChannel: paymentChannel, Comments: comments, Exp: exp, Token: token };
-    var headerJson   = JSON.stringify(headerData);
-    var headerBase64 = btoa(unescape(encodeURIComponent(headerJson)));
-    var url = "http://thenexushealth.com/OctopusBookPublicAppointment?header=" + encodeURIComponent(headerBase64);
-    window.open(url, "_blank");
-}
-
-function generateSHA256(message) {
-    var shaObj = new jsSHA("SHA-256", "TEXT");
-    shaObj.update(message);
-    return shaObj.getHash("HEX");
+    // The Nexus link is signed server-side so the shared secret stays out of the page.
+    var fields = {
+        ic: ic,
+        name: name,
+        phone: phone,
+        receipt_no: receiptNo ? receiptNo.trim() : "",
+        payment_channel: paymentChannel ? paymentChannel.trim() : ""
+    };
+    var form = document.createElement("form");
+    form.method        = "POST";
+    form.action        = "vaccine_clinic_link.php";
+    form.target        = "_blank";
+    form.acceptCharset = "UTF-8";
+    for (var key in fields) {
+        var input = document.createElement("input");
+        input.type  = "hidden";
+        input.name  = key;
+        input.value = fields[key];
+        form.appendChild(input);
+    }
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
 }
 </script>
 <?php
