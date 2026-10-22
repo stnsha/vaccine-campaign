@@ -78,11 +78,13 @@ foreach ($rows as $idx => $row) {
     }
 
     // Insert transaction (default time 00:00)
-    $query = "INSERT INTO vaccine_trans (id, timestamp, v_date, cust_id, item_code, clinic, outlet_id, remark, status, operator, inv_num, campaign_id) VALUES (NULL, NOW(), '$v_date 00:00:00', '$cust_id', '$item_code', '$clinic_id', '$outlet_id', '$remark', '0', '$id_user', '$inv_num', '$campaign_id')";
+    $query = "INSERT INTO vaccine_trans (id, timestamp, v_date, cust_id, item_code, clinic, outlet_id, remark, status, operator, inv_num, campaign_id, recycle) VALUES (NULL, NOW(), '$v_date 00:00:00', '$cust_id', '$item_code', '$clinic_id', '$outlet_id', '$remark', '0', '$id_user', '$inv_num', '$campaign_id', '0')";
     $result = mysqli_query($conn, $query);
 
     if ($result) {
         $added++;
+    } else {
+        $errors[] = "Row $idx: Failed to save transaction for customer $customer_name (" . mysqli_error($conn) . ").";
     }
 }
 ?>

@@ -21,21 +21,21 @@ $row    = $result ? mysqli_fetch_assoc($result) : null;
 
 if (!$row) { json_err('Customer not found.'); }
 
-$phone_str   = stripslashes($row['phone']);
+$phone_str   = stripslashes($row['phone'] ?? '');
 $phone_parts = explode('@', $phone_str);
 
 echo json_encode(array(
     'success'     => true,
     'id'          => $row['id'],
-    'name'        => stripslashes($row['customer_name']),
-    'ic'          => stripslashes($row['ic']),
+    'name'        => stripslashes($row['customer_name'] ?? ''),
+    'ic'          => stripslashes($row['ic'] ?? ''),
     'phone'       => $phone_parts[0],
     'child_num'   => isset($phone_parts[1]) ? $phone_parts[1] : '',
-    'language'    => stripslashes($row['language']),
-    'race'        => stripslashes($row['race']),
-    'nationality' => stripslashes($row['nationality']),
-    'email'       => stripslashes($row['email']),
-    'addr'        => stripslashes($row['c_addr'])
+    'language'    => stripslashes($row['language'] ?? ''),
+    'race'        => stripslashes($row['race'] ?? ''),
+    'nationality' => stripslashes($row['nationality'] ?? ''),
+    'email'       => stripslashes($row['email'] ?? ''),
+    'addr'        => stripslashes($row['c_addr'] ?? '')
 ));
 
 mysqli_close($conn);
